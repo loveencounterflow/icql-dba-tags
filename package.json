@@ -1,7 +1,29 @@
 {
-	"dependencies": {
-		"cnd": "^9.2.2",
-		"intertype": "^7.6.7",
-		"letsfreezethat": "^3.1.0"
-	}
+  "name": "icql-dba-tags",
+  "version": "0.0.0",
+  "description": "icql-dba extension for tagging arbitrary objects individually or by range",
+  "main": "lib/main.js",
+    "test": "echo see 'https://github.com/loveencounterflow/hengist/tree/master/dev/icql-dba-tags'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/loveencounterflow/icql-dba-tags.git"
+  },
+  "keywords": [
+    "sql",
+    "sqlite",
+    "db",
+    "tagging"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/loveencounterflow/icql-dba-tags/issues"
+  },
+  "homepage": "https://github.com/loveencounterflow/icql-dba-tags#readme",
+  "dependencies": {
+    "cnd": "^9.2.2",
+    "intertype": "^7.6.7",
+    "letsfreezethat": "^3.1.0"
+  }
 }
