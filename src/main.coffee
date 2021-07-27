@@ -71,7 +71,7 @@ types.defaults =
     cid:        null
 
 #===========================================================================================================
-class @Dbatags
+class @Dtags
   #---------------------------------------------------------------------------------------------------------
   constructor: ( cfg ) ->
     validate.dbatags_constructor_cfg @cfg = { types.defaults.dbatags_constructor_cfg..., cfg..., }
