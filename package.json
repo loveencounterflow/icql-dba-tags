@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "description": "icql-dba extension for tagging arbitrary objects individually or by range",
   "main": "lib/main.js",
+  "scripts": {
     "test": "echo see 'https://github.com/loveencounterflow/hengist/tree/master/dev/icql-dba-tags'"
   },
   "repository": {
