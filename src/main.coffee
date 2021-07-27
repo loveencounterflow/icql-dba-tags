@@ -14,21 +14,15 @@ help                      = CND.get_logger 'help',      badge
 whisper                   = CND.get_logger 'whisper',   badge
 echo                      = CND.echo.bind CND
 #...........................................................................................................
-test                      = require '../../../apps/guy-test'
-PATH                      = require 'path'
-H                         = require './helpers'
 types                     = new ( require 'intertype' ).Intertype
 { isa
   type_of
   validate
   validate_list_of }      = types.export()
 # { to_width }              = require 'to-width'
-on_process_exit           = require 'exit-hook'
-sleep                     = ( dts ) -> new Promise ( done ) => setTimeout done, dts * 1000
 SQL                       = String.raw
 jr                        = JSON.stringify
 jp                        = JSON.parse
-dba_path                  = '../../../apps/icql-dba'
 { lets
   freeze }                = require 'letsfreezethat'
 
@@ -85,7 +79,7 @@ class @Dbatags
       @dba  = @cfg.dba
       delete @cfg.dba
     else
-      @dba  = new ( require dba_path ).Dba()
+      @dba  = new ( require 'icql-dba' ).Dba()
     @cfg = freeze @cfg
     @_create_db_structure()
     @_compile_sql()
