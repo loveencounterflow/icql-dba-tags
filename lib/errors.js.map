@@ -1,0 +1,13 @@
+{
+  "version": 3,
+  "file": "",
+  "sourceRoot": "",
+  "sources": [
+    "../src/errors.coffee"
+  ],
+  "names": [],
+  "mappings": "AAAA;EAAA;AAAA,MAAA,GAAA,EAAA,CAAA,EAAA,KAAA,EAAA,KAAA,EAAA,GAAA;;;EAIA,GAAA,GAA4B,OAAA,CAAQ,KAAR;;EAC5B,GAAA,GAA4B,GAAG,CAAC;;EAChC,KAAA,GAA4B;;EAC5B,KAAA,GAA4B,GAAG,CAAC,UAAJ,CAAe,OAAf,EAA4B,KAA5B,EAP5B;;;;;;;;EAeA,CAAA,GAA4B,OAAA,CAAQ,qBAAR,EAf5B;;;EAkBM,IAAC,CAAA,sBAAP,MAAA,oBAAA,QAAmC,CAAC,CAAC,UAArC;IACE,WAAa,CAAE,GAAF,EAAO,KAAP,CAAA;WAAuB,CAAM,GAAN,EAAW,CAAA,uBAAA,CAAA,CAA0B,GAAA,CAAI,KAAJ,CAA1B,CAAA,CAAX;IAAvB;;EADf;;EAEM,IAAC,CAAA,0BAAP,MAAA,wBAAA,QAAuC,CAAC,CAAC,UAAzC;IACE,WAAa,CAAE,GAAF,EAAO,KAAP,CAAA;WAAuB,CAAM,GAAN,EAAW,CAAA,kDAAA,CAAA,CAAqD,GAAA,CAAI,KAAJ,CAArD,CAAA,CAAX;IAAvB;;EADf;;EAEM,IAAC,CAAA,oCAAP,MAAA,kCAAA,QAAiD,CAAC,CAAC,UAAnD;IACE,WAAa,CAAE,GAAF,EAAO,KAAP,EAAc,OAAd,CAAA;WAAgC,CAAM,GAAN,EAAW,CAAA,8BAAA,CAAA,CAAiC,GAAA,CAAI,KAAJ,CAAjC,CAAA,EAAA,CAAA,CAA+C,OAA/C,CAAA,CAAA,CAAX;IAAhC;;EADf;;EAEM,IAAC,CAAA,mBAAP,MAAA,iBAAA,QAAgC,CAAC,CAAC,UAAlC;IACE,WAAa,CAAE,GAAF,EAAO,OAAP,CAAA;WAAyB,CAAM,GAAN,EAAW,OAAX;IAAzB;;EADf;AAxBA",
+  "sourcesContent": [
+    "'use strict'\n\n\n############################################################################################################\nCND                       = require 'cnd'\nrpr                       = CND.rpr\nbadge                     = 'ICQL-DBA/ERRORS'\ndebug                     = CND.get_logger 'debug',     badge\n# warn                      = CND.get_logger 'warn',      badge\n# info                      = CND.get_logger 'info',      badge\n# urge                      = CND.get_logger 'urge',      badge\n# help                      = CND.get_logger 'help',      badge\n# whisper                   = CND.get_logger 'whisper',   badge\n# echo                      = CND.echo.bind CND\n\nE                         = require 'icql-dba/lib/errors'\n\n#===========================================================================================================\nclass @Dtags_invalid_tagex extends E.Dba_error\n  constructor: ( ref, tagex )      -> super ref, \"invalid tag expression #{rpr tagex}\"\nclass @Dtags_subtractive_value extends E.Dba_error\n  constructor: ( ref, tagex )      -> super ref, \"subtractive tag expression cannot have value, got #{rpr tagex}\"\nclass @Dtags_illegal_tagex_value_literal extends E.Dba_error\n  constructor: ( ref, tagex, message )      -> super ref, \"unable to parse value part of #{rpr tagex} (#{message})\"\nclass @Dtags_unexpected extends E.Dba_error\n  constructor: ( ref, message )      -> super ref, message\n"
+  ]
+}
