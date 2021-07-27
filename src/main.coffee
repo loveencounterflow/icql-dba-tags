@@ -25,6 +25,7 @@ jr                        = JSON.stringify
 jp                        = JSON.parse
 { lets
   freeze }                = require 'letsfreezethat'
+E                         = require './errors'
 
 
 #===========================================================================================================
@@ -57,6 +58,11 @@ types.declare 'dbatags_tagchain_from_cid_cfg', tests:
   '@isa.integer x.cid':       ( x ) -> @isa.integer x.cid
 
 #-----------------------------------------------------------------------------------------------------------
+types.declare 'dbatags_parse_tagex_cfg', tests:
+  '@isa.object x':              ( x ) -> @isa.object x
+  '@isa.nonempty_text x.tagex': ( x ) -> @isa.nonempty_text x.tagex
+
+#-----------------------------------------------------------------------------------------------------------
 types.defaults =
   dbatags_constructor_cfg:
     dba:        null
@@ -69,6 +75,8 @@ types.defaults =
     hi:         null
   dbatags_tagchain_from_cid_cfg:
     cid:        null
+  dbatags_parse_tagex_cfg:
+    tagex:      null
 
 #===========================================================================================================
 class @Dtags
@@ -164,31 +172,43 @@ class @Dtags
     throw new Error 'XXXXXXXXXXXXXXX'
 
   #---------------------------------------------------------------------------------------------------------
-  tag_pattern: ///
+  tagex_pattern: ///
     ^
     (?<mode>  [ - + ] )
-    (?<key>   [ a-z A-Z _ \/ \$ ] [ - a-z A-Z 0-9 _ \/ \$ ]* )
+    (?<tag>   [ a-z A-Z _ \/ \$ ] [ - a-z A-Z 0-9 _ \/ \$ ]* )
     ( : (?<value> [^ - + ]+ | ' .* ' | " .* " ) )?
     $
     ///
 
   #---------------------------------------------------------------------------------------------------------
+  parse_tagex: ( cfg ) ->
+    validate.dbatags_parse_tagex_cfg cfg = { types.defaults.dbatags_parse_tagex_cfg..., cfg..., }
+    { tagex, } = cfg
+    unless ( match = tagex.match @tagex_pattern )?
+      throw new E.Dtags_invalid_tagex '^dtags@448^', tagex
+    { mode, tag, value, }   = match.groups
+    switch mode
+      when '+'
+        value ?= 'true'
+      when '-'
+        if value?
+          throw new E.Dtags_subtractive_value '^dtags@222^', tagex
+        value = 'false'
+    try value = JSON.parse value catch error
+      throw new E.Dtags_illegal_tagex_value_literal '^dtags@222^', tagex, error.message
+    return { mode, tag, value, }
+
+  #---------------------------------------------------------------------------------------------------------
   tags_from_tagchain: ( tagchain ) ->
-    validate_list_of.text tagchain
+    validate.list tagchain
     R = {}
     return R if tagchain.length is 0
-    for tag_expression in tagchain
-      unless ( match = tag_expression.match @tag_pattern )?
-        throw new Error "^tags_from_tagchain@448^ tag expression not recognized: #{rpr tag_expression}"
-      # debug '^9458^', match
-      { mode, key, value, }   = match.groups
+    for tagex in tagchain
+      { mode, tag, value, } = @parse_tagex { tagex, }
       switch mode
-        when '+'
-          unless value?                       then value = true
-          else if value[ 0 ] in [ '"', "'", ] then value = value[ 1 ... value.length - 1 ]
-          R[ key ] = value
-        when '-'
-          delete R[ key ]
+        when '+' then R[ tag ] = value
+        when '-' then delete R[ tag ]
+        else throw new E.Dtags_unexpected '^dtags@222^', "unknown tagex mode in #{rpr tagex}"
     return R
 
 
