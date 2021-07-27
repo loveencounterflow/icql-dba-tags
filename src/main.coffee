@@ -98,7 +98,9 @@ class @Dbatags
           hi      integer not null,
           -- chr_lo  text generated always as ( chr_from_cid( lo ) ) virtual not null,
           -- chr_hi  text generated always as ( chr_from_cid( hi ) ) virtual not null,
-          tag     text    not null references #{x}tags ( tag ) );
+          mode    boolean not null,
+          tag     text    not null references #{x}tags ( tag ),
+          value   json    not null );
       create index if not exists #{x}cidlohi_idx on #{x}tagged_ranges ( lo, hi );
       create index if not exists #{x}cidhi_idx on   #{x}tagged_ranges ( hi );
       create table if not exists #{x}tagged_cids_cache (
@@ -119,8 +121,8 @@ class @Dbatags
           values ( $tag, $value );"""
           # on conflict ( tag ) do nothing;"""
       insert_tagged_range: SQL"""
-        insert into #{x}tagged_ranges ( lo, hi, tag )
-          values ( $lo, $hi, $tag )"""
+        insert into #{x}tagged_ranges ( lo, hi, mode, tag, value )
+          values ( $lo, $hi, $mode, $tag, $value )"""
       tags_from_cid: SQL"""
         select
             tag,
