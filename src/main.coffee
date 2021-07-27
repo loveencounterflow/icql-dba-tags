@@ -41,9 +41,14 @@ types.declare 'dbatags_tag', tests:
   '@isa.nonempty_text x': ( x ) -> @isa.nonempty_text x
 
 #-----------------------------------------------------------------------------------------------------------
+types.declare 'dbatags_mode', tests:
+  "x in [ '+', '-', ]": ( x ) -> x in [ '+', '-', ]
+
+#-----------------------------------------------------------------------------------------------------------
 types.declare 'dbatags_add_tag_cfg', tests:
   '@isa.object x':            ( x ) -> @isa.object x
   '@isa.dbatags_tag x.tag':   ( x ) -> @isa.dbatags_tag x.tag
+  '@isa.dbatags_mode x.mode': ( x ) -> @isa.dbatags_mode x.mode
 
 #-----------------------------------------------------------------------------------------------------------
 types.declare 'dbatags_add_tagged_range_cfg', tests:
@@ -63,20 +68,38 @@ types.declare 'dbatags_parse_tagex_cfg', tests:
   '@isa.nonempty_text x.tagex': ( x ) -> @isa.nonempty_text x.tagex
 
 #-----------------------------------------------------------------------------------------------------------
+types.declare 'dbatags_tags_from_tagchain_cfg', tests:
+  '@isa.object x':              ( x ) -> @isa.object x
+  '@isa.list x.tagchain':       ( x ) -> @isa.list x.tagchain
+
+#-----------------------------------------------------------------------------------------------------------
+types.declare 'dbatags_tags_from_tagexchain_cfg', tests:
+  '@isa.object x':              ( x ) -> @isa.object x
+  '@isa.list x.tagexchain':     ( x ) -> @isa.list x.tagexchain
+
+#-----------------------------------------------------------------------------------------------------------
 types.defaults =
   dbatags_constructor_cfg:
     dba:        null
     prefix:     't_'
   dbatags_add_tag_cfg:
+    mode:       '+'
     tag:        null
+    value:      false
   dbatags_add_tagged_range_cfg:
+    mode:       '+'
     tag:        null
     lo:         null
     hi:         null
-  dbatags_tagchain_from_cid_cfg:
-    cid:        null
+    value:      true
   dbatags_parse_tagex_cfg:
     tagex:      null
+  dbatags_tagchain_from_cid_cfg:
+    cid:        null
+  dbatags_tags_from_tagchain_cfg:
+    tagchain:   null
+  dbatags_tags_from_tagexchain_cfg:
+    tagexchain: null
 
 #===========================================================================================================
 class @Dtags
@@ -185,30 +208,41 @@ class @Dtags
     validate.dbatags_parse_tagex_cfg cfg = { types.defaults.dbatags_parse_tagex_cfg..., cfg..., }
     { tagex, } = cfg
     unless ( match = tagex.match @tagex_pattern )?
-      throw new E.Dtags_invalid_tagex '^dtags@448^', tagex
+      throw new E.Dtags_invalid_tagex '^dtags@777^', tagex
     { mode, tag, value, }   = match.groups
     switch mode
       when '+'
         value ?= 'true'
       when '-'
         if value?
-          throw new E.Dtags_subtractive_value '^dtags@222^', tagex
+          throw new E.Dtags_subtractive_value '^dtags@778^', tagex
         value = 'false'
     try value = JSON.parse value catch error
-      throw new E.Dtags_illegal_tagex_value_literal '^dtags@222^', tagex, error.message
+      throw new E.Dtags_illegal_tagex_value_literal '^dtags@779^', tagex, error.message
     return { mode, tag, value, }
 
   #---------------------------------------------------------------------------------------------------------
-  tags_from_tagchain: ( tagchain ) ->
-    validate.list tagchain
-    R = {}
+  tags_from_tagchain: ( cfg ) ->
+    ### TAINT make deletion bahvior configurable ###
+    ### TAINT allow to seed result with fallbacks ###
+    validate.dbatags_tags_from_tagchain_cfg cfg = { types.defaults.dbatags_tags_from_tagchain_cfg..., cfg..., }
+    R             = {}
+    { tagchain, } = cfg
     return R if tagchain.length is 0
-    for tagex in tagchain
-      { mode, tag, value, } = @parse_tagex { tagex, }
+    for tag in tagchain
+      { mode, tag, value, } = tag
       switch mode
         when '+' then R[ tag ] = value
-        when '-' then delete R[ tag ]
-        else throw new E.Dtags_unexpected '^dtags@222^', "unknown tagex mode in #{rpr tagex}"
+        # when '-' then delete R[ tag ]
+        when '-' then R[ tag ] = value
+        else throw new E.Dtags_unexpected '^dtags@780^', "unknown tag mode in #{rpr tag}"
     return R
+
+  #---------------------------------------------------------------------------------------------------------
+  tags_from_tagexchain: ( cfg ) ->
+    validate.dbatags_tags_from_tagexchain_cfg cfg = { types.defaults.dbatags_tags_from_tagexchain_cfg..., cfg..., }
+    tagchain = ( ( @parse_tagex { tagex, } ) for tagex in cfg.tagexchain )
+    return @tags_from_tagchain { tagchain, }
+
 
 
