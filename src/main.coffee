@@ -89,7 +89,9 @@ class @Dbatags
   _create_db_structure: ->
     x = @cfg.prefix
     @dba.execute SQL"""
-      create table if not exists #{x}tags ( tag text unique not null primary key );
+      create table if not exists #{x}tags (
+        tag   text unique not null primary key,
+        value json not null default 'true' );
       create table if not exists #{x}tagged_ranges (
           nr      integer primary key,
           lo      integer not null,
@@ -113,9 +115,9 @@ class @Dbatags
     x = @cfg.prefix
     @sql =
       insert_tag: SQL"""
-        insert into #{x}tags ( tag )
-          values ( $tag )
-          on conflict ( tag ) do nothing;"""
+        insert into #{x}tags ( tag, value )
+          values ( $tag, $value );"""
+          # on conflict ( tag ) do nothing;"""
       insert_tagged_range: SQL"""
         insert into #{x}tagged_ranges ( lo, hi, tag )
           values ( $lo, $hi, $tag )"""
