@@ -131,6 +131,8 @@ class @Dbatags
   #---------------------------------------------------------------------------------------------------------
   add_tag: ( cfg ) ->
     validate.dbatags_add_tag_cfg cfg = { types.defaults.dbatags_add_tag_cfg..., cfg..., }
+    cfg.value ?= true
+    cfg.value  = jr cfg.value
     @dba.run @sql.insert_tag, cfg
     @_clear_cache_for_range cfg
     return null
@@ -141,6 +143,8 @@ class @Dbatags
   #---------------------------------------------------------------------------------------------------------
   add_tagged_range: ( cfg ) ->
     validate.dbatags_add_tagged_range_cfg cfg = { types.defaults.dbatags_add_tagged_range_cfg..., cfg..., }
+    cfg.value ?= true
+    cfg.value  = jr cfg.value
     @dba.run @sql.insert_tagged_range, cfg
     return null
 
