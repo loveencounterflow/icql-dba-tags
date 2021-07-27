@@ -1,0 +1,7 @@
+{
+	"dependencies": {
+		"cnd": "^9.2.2",
+		"intertype": "^7.6.7",
+		"letsfreezethat": "^3.1.0"
+	}
+}
