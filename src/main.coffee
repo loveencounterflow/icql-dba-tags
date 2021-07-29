@@ -204,7 +204,7 @@ class @Dtags
     R       = [ ( @dba.query @sql.cached_tags_from_id, cfg )..., ]
     return JSON.parse R[ 0 ].tags if R.length > 0
     R       = @tags_from_tagchain { tagchain: ( @tagchain_from_id cfg ), }
-    @dba.run @sql.insert_cached_tags, { id, tags: ( jr R ), }
+    @dba.run @sql.insert_cached_tags, { id, tags: ( JSON.stringify R ), }
     return R
 
   #---------------------------------------------------------------------------------------------------------
