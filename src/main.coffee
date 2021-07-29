@@ -208,6 +208,7 @@ class @Dtags
     return R
 
   #---------------------------------------------------------------------------------------------------------
+  ### TAINT pattern does not allow for escaped quotes ###
   tagex_pattern: ///
     ^
     (?<mode>  [ - + ] )
