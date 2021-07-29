@@ -38,29 +38,34 @@ types.declare 'dbatags_constructor_cfg', tests:
 
 #-----------------------------------------------------------------------------------------------------------
 types.declare 'dbatags_tag', tests:
-  '@isa.nonempty_text x': ( x ) -> @isa.nonempty_text x
+  '@isa.nonempty_text x':       ( x ) -> @isa.nonempty_text x
 
 #-----------------------------------------------------------------------------------------------------------
 types.declare 'dbatags_mode', tests:
-  "x in [ '+', '-', ]": ( x ) -> x in [ '+', '-', ]
+  "x in [ '+', '-', ]":         ( x ) -> x in [ '+', '-', ]
 
 #-----------------------------------------------------------------------------------------------------------
 types.declare 'dbatags_add_tag_cfg', tests:
-  '@isa.object x':            ( x ) -> @isa.object x
-  '@isa.dbatags_tag x.tag':   ( x ) -> @isa.dbatags_tag x.tag
-  '@isa.dbatags_mode x.mode': ( x ) -> @isa.dbatags_mode x.mode
+  '@isa.object x':              ( x ) -> @isa.object x
+  '@isa.dbatags_tag x.tag':     ( x ) -> @isa.dbatags_tag x.tag
+  '@isa.dbatags_mode x.mode':   ( x ) -> @isa.dbatags_mode x.mode
 
 #-----------------------------------------------------------------------------------------------------------
 types.declare 'dbatags_add_tagged_range_cfg', tests:
-  '@isa.object x':            ( x ) -> @isa.object x
-  '@isa.integer x.lo':        ( x ) -> @isa.integer x.lo
-  '@isa.integer x.hi':        ( x ) -> @isa.integer x.hi
-  '@isa.dbatags_tag x.tag':   ( x ) -> @isa.dbatags_tag x.tag
+  '@isa.object x':              ( x ) -> @isa.object x
+  '@isa.integer x.lo':          ( x ) -> @isa.integer x.lo
+  '@isa.integer x.hi':          ( x ) -> @isa.integer x.hi
+  '@isa.dbatags_tag x.tag':     ( x ) -> @isa.dbatags_tag x.tag
 
 #-----------------------------------------------------------------------------------------------------------
-types.declare 'dbatags_tagchain_from_cid_cfg', tests:
-  '@isa.object x':            ( x ) -> @isa.object x
-  '@isa.integer x.cid':       ( x ) -> @isa.integer x.cid
+types.declare 'dbatags_tagchain_from_id_cfg', tests:
+  '@isa.object x':              ( x ) -> @isa.object x
+  '@isa.integer x.id':          ( x ) -> @isa.integer x.id
+
+#-----------------------------------------------------------------------------------------------------------
+types.declare 'dbatags_tags_from_id_cfg', tests:
+  '@isa.object x':              ( x ) -> @isa.object x
+  '@isa.integer x.id':          ( x ) -> @isa.integer x.id
 
 #-----------------------------------------------------------------------------------------------------------
 types.declare 'dbatags_parse_tagex_cfg', tests:
@@ -75,7 +80,6 @@ types.declare 'dbatags_tags_from_tagchain_cfg', tests:
 #-----------------------------------------------------------------------------------------------------------
 types.declare 'dbatags_tags_from_tagexchain_cfg', tests:
   '@isa.object x':              ( x ) -> @isa.object x
-  '@isa.list x.tagexchain':     ( x ) -> @isa.list x.tagexchain
 
 #-----------------------------------------------------------------------------------------------------------
 types.defaults =
@@ -91,11 +95,13 @@ types.defaults =
     tag:        null
     lo:         null
     hi:         null
-    value:      true
+    value:      null
   dbatags_parse_tagex_cfg:
     tagex:      null
-  dbatags_tagchain_from_cid_cfg:
-    cid:        null
+  dbatags_tagchain_from_id_cfg:
+    id:         null
+  dbatags_tags_from_id_cfg:
+    id:         null
   dbatags_tags_from_tagchain_cfg:
     tagchain:   null
   dbatags_tags_from_tagexchain_cfg:
@@ -121,25 +127,20 @@ class @Dtags
     x = @cfg.prefix
     @dba.execute SQL"""
       create table if not exists #{x}tags (
-        tag   text unique not null primary key,
-        value json not null default 'true' );
+        tag       text    not null primary key,
+        value     json    not null default 'true' );
       create table if not exists #{x}tagged_ranges (
-          nr      integer primary key,
+          nr      integer not null primary key,
           lo      integer not null,
           hi      integer not null,
-          -- chr_lo  text generated always as ( chr_from_cid( lo ) ) virtual not null,
-          -- chr_hi  text generated always as ( chr_from_cid( hi ) ) virtual not null,
           mode    boolean not null,
           tag     text    not null references #{x}tags ( tag ),
           value   json    not null );
-      create index if not exists #{x}cidlohi_idx on #{x}tagged_ranges ( lo, hi );
-      create index if not exists #{x}cidhi_idx on   #{x}tagged_ranges ( hi );
-      create table if not exists #{x}tagged_cids_cache (
-          cid     integer not null,
-          -- chr     text    not null,
-          tag     text    not null,
-          value   json    not null,
-        primary key ( cid, tag ) );
+      create index if not exists #{x}idlohi_idx on #{x}tagged_ranges ( lo, hi );
+      create index if not exists #{x}idhi_idx on   #{x}tagged_ranges ( hi );
+      create table if not exists #{x}tagged_ids_cache (
+          id      integer not null primary key,
+          tags    json    not null );
       """
     return null
 
@@ -154,13 +155,22 @@ class @Dtags
       insert_tagged_range: SQL"""
         insert into #{x}tagged_ranges ( lo, hi, mode, tag, value )
           values ( $lo, $hi, $mode, $tag, $value )"""
-      tags_from_cid: SQL"""
+      tagchain_from_id: SQL"""
         select
+            mode,
             tag,
             value
           from #{x}tagged_ranges
-          where $cid between lo and hi
+          where $id between lo and hi
           order by nr asc;"""
+      cached_tags_from_id: SQL"""
+        select
+            tags
+          from #{x}tagged_ids_cache
+          where id = $id;"""
+      insert_cached_tags: SQL"""
+        insert into #{x}tagged_ids_cache ( id, tags )
+          values ( $id, $tags );"""
     return null
 
   #---------------------------------------------------------------------------------------------------------
@@ -178,21 +188,25 @@ class @Dtags
   #---------------------------------------------------------------------------------------------------------
   add_tagged_range: ( cfg ) ->
     validate.dbatags_add_tagged_range_cfg cfg = { types.defaults.dbatags_add_tagged_range_cfg..., cfg..., }
-    cfg.value ?= true
+    cfg.value ?= if cfg.mode is '+' then true else false
     cfg.value  = jr cfg.value
     @dba.run @sql.insert_tagged_range, cfg
     return null
 
   #---------------------------------------------------------------------------------------------------------
-  tagchain_from_cid: ( cfg ) ->
-    validate.dbatags_tagchain_from_cid_cfg cfg = { types.defaults.dbatags_tagchain_from_cid_cfg..., cfg..., }
-    R   = []
-    R.push [ row.tag, row.value, ] for row from @dba.query @sql.tags_from_cid, { cid: cfg.cid, }
-    return R
+  tagchain_from_id: ( cfg ) ->
+    validate.dbatags_tagchain_from_id_cfg cfg = { types.defaults.dbatags_tagchain_from_id_cfg..., cfg..., }
+    return [ ( @dba.query @sql.tagchain_from_id, cfg )..., ]
 
   #---------------------------------------------------------------------------------------------------------
-  tags_from_cid: ( cfg ) ->
-    throw new Error 'XXXXXXXXXXXXXXX'
+  tags_from_id: ( cfg ) ->
+    validate.dbatags_tags_from_id_cfg cfg = { types.defaults.dbatags_tags_from_id_cfg..., cfg..., }
+    { id, } = cfg
+    R       = [ ( @dba.query @sql.cached_tags_from_id, cfg )..., ]
+    return jp R[ 0 ].tags if R.length > 0
+    R       = @tags_from_tagchain { tagchain: ( @tagchain_from_id cfg ), }
+    @dba.run @sql.insert_cached_tags, { id, tags: ( jr R ), }
+    return R
 
   #---------------------------------------------------------------------------------------------------------
   tagex_pattern: ///
