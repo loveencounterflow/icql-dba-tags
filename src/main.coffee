@@ -155,6 +155,7 @@ class @Dtags
           values ( $lo, $hi, $mode, $tag, $value )"""
       tagchain_from_id: SQL"""
         select
+            nr,
             mode,
             tag,
             value
