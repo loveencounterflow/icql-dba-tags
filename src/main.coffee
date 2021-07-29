@@ -195,7 +195,11 @@ class @Dtags
   #---------------------------------------------------------------------------------------------------------
   tagchain_from_id: ( cfg ) ->
     validate.dbatags_tagchain_from_id_cfg cfg = { types.defaults.dbatags_tagchain_from_id_cfg..., cfg..., }
-    return [ ( @dba.query @sql.tagchain_from_id, cfg )..., ]
+    R = []
+    for row from @dba.query @sql.tagchain_from_id, cfg
+      row.value = JSON.parse row.value
+      R.push row
+    return R
 
   #---------------------------------------------------------------------------------------------------------
   tags_from_id: ( cfg ) ->
