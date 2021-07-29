@@ -33,6 +33,7 @@ types.declare 'dbatags_constructor_cfg', tests:
     return false unless @isa.text x.prefix
     return true if x.prefix is ''
     return ( /^[_a-z][_a-z0-9]*$/ ).test x.prefix
+  "x.fallbacks in [ true, false, 'all', ]": ( x ) -> x.fallbacks in [ true, false, 'all', ]
 
 #-----------------------------------------------------------------------------------------------------------
 types.declare 'dbatags_tag', tests:
@@ -47,6 +48,7 @@ types.declare 'dbatags_add_tag_cfg', tests:
   '@isa.object x':              ( x ) -> @isa.object x
   '@isa.dbatags_tag x.tag':     ( x ) -> @isa.dbatags_tag x.tag
   '@isa.dbatags_mode x.mode':   ( x ) -> @isa.dbatags_mode x.mode
+  'not x.nr?':                  ( x ) -> not x.nr?
 
 #-----------------------------------------------------------------------------------------------------------
 types.declare 'dbatags_add_tagged_range_cfg', tests:
@@ -84,7 +86,9 @@ types.defaults =
   dbatags_constructor_cfg:
     dba:        null
     prefix:     't_'
+    fallbacks:  false
   dbatags_add_tag_cfg:
+    nr:         null
     mode:       '+'
     tag:        null
     value:      false
@@ -115,7 +119,8 @@ class @Dtags
       delete @cfg.dba
     else
       @dba  = new ( require 'icql-dba' ).Dba()
-    @cfg = freeze @cfg
+    @cfg          = freeze @cfg
+    @_tag_max_nr  = 0
     @_create_db_structure()
     @_compile_sql()
     return undefined
@@ -125,8 +130,9 @@ class @Dtags
     x = @cfg.prefix
     @dba.execute SQL"""
       create table if not exists #{x}tags (
-        tag       text    not null primary key,
-        value     json    not null default 'true' );
+          nr      integer not null,
+          tag     text    not null primary key,
+          value   json    not null default 'true' );
       create table if not exists #{x}tagged_ranges (
           nr      integer not null primary key,
           lo      integer not null,
@@ -134,8 +140,9 @@ class @Dtags
           mode    boolean not null,
           tag     text    not null references #{x}tags ( tag ),
           value   json    not null );
-      create index if not exists #{x}idlohi_idx on #{x}tagged_ranges ( lo, hi );
-      create index if not exists #{x}idhi_idx on   #{x}tagged_ranges ( hi );
+      create index if not exists #{x}tags_nr_idx on #{x}tags          ( nr );
+      create index if not exists #{x}idlohi_idx on  #{x}tagged_ranges ( lo, hi );
+      create index if not exists #{x}idhi_idx on    #{x}tagged_ranges ( hi );
       create table if not exists #{x}tagged_ids_cache (
           id      integer not null primary key,
           tags    json    not null );
@@ -147,8 +154,8 @@ class @Dtags
     x = @cfg.prefix
     @sql =
       insert_tag: SQL"""
-        insert into #{x}tags ( tag, value )
-          values ( $tag, $value );"""
+        insert into #{x}tags ( nr, tag, value )
+          values ( $nr, $tag, $value );"""
           # on conflict ( tag ) do nothing;"""
       insert_tagged_range: SQL"""
         insert into #{x}tagged_ranges ( lo, hi, mode, tag, value )
@@ -170,6 +177,9 @@ class @Dtags
       insert_cached_tags: SQL"""
         insert into #{x}tagged_ids_cache ( id, tags )
           values ( $id, $tags );"""
+      get_fallbacks: SQL"""
+        select * from #{x}tags
+          order by nr;"""
     return null
 
   #---------------------------------------------------------------------------------------------------------
@@ -177,6 +187,8 @@ class @Dtags
     validate.dbatags_add_tag_cfg cfg = { types.defaults.dbatags_add_tag_cfg..., cfg..., }
     cfg.value ?= true
     cfg.value  = JSON.stringify cfg.value
+    @_tag_max_nr++
+    cfg.nr     = @_tag_max_nr
     @dba.run @sql.insert_tag, cfg
     @_clear_cache_for_range cfg
     return null
@@ -193,6 +205,22 @@ class @Dtags
     return null
 
   #---------------------------------------------------------------------------------------------------------
+  get_filtered_fallbacks: ->
+    return {} if @cfg.fallbacks is false
+    R = @get_fallbacks()
+    return R if @cfg.fallbacks is 'all'
+    for tag, value of R
+      delete R[ tag ] if value is false
+    return R
+
+  #---------------------------------------------------------------------------------------------------------
+  get_fallbacks: ->
+    R = {}
+    for row from @dba.query @sql.get_fallbacks
+      R[ row.tag ] = JSON.parse row.value
+    return R
+
+  #---------------------------------------------------------------------------------------------------------
   tagchain_from_id: ( cfg ) ->
     validate.dbatags_tagchain_from_id_cfg cfg = { types.defaults.dbatags_tagchain_from_id_cfg..., cfg..., }
     R = []
@@ -207,7 +235,8 @@ class @Dtags
     { id, } = cfg
     R       = [ ( @dba.query @sql.cached_tags_from_id, cfg )..., ]
     return JSON.parse R[ 0 ].tags if R.length > 0
-    R       = @tags_from_tagchain { tagchain: ( @tagchain_from_id cfg ), }
+    R       = @get_filtered_fallbacks()
+    Object.assign R, @tags_from_tagchain { tagchain: ( @tagchain_from_id cfg ), }
     @dba.run @sql.insert_cached_tags, { id, tags: ( JSON.stringify R ), }
     return R
 
