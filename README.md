@@ -9,6 +9,7 @@
 
 - [Tag Expressions (tagexes)](#tag-expressions-tagexes)
 - [Usage](#usage)
+  - [Instantiation](#instantiation)
 - [Data Structure](#data-structure)
 - [API](#api)
 - [To Do](#to-do)
@@ -31,6 +32,22 @@
 
 ## Usage
 
+### Instantiation
+
+* `fallbacks: true`: when retrieving tags for an ID, pre-poulate the returned object with the
+  tags' fallback values, but *leave out fallback values that are `false`*. The most frequent use case is
+  thought to be the one where one has a fair number of tags, most of which only apply to a small-ish
+  subset of IDs. One will want to set the fallback value for all these tags to `false` and associate tags
+  selectively where they positively do apply. Then, when retrieving tags with `fallbacks: true`, an object
+  will be returned with only the explicit tags set as keys, and the implicitly `false` ones left out. This
+  being JavaScript, accessing `tags.foo` on an object `tags = { bar: true, }` will result in `undefined`,
+  which is a falsey value.
+* `fallbacks: 'all'`: like `fallbacks: true` but does include even those fallback values that are `false`.
+  When retrieving tags with `fallbacks: 'all'`, the resulting object will always contain *all* registered
+  tags with their effective values.
+* `fallbacks: false`: (default) do not pre-populate the returned object of tag values.
+
+
 ## Data Structure
 
 * Tags get associated with single IDs or ranges of IDs
@@ -46,19 +63,7 @@
 ## To Do
 
 * [ ] documentation
-* [ ] allow to set fallback handling at instantiation time:
-  * `fallbacks: true`: (default) when retrieving tags for an ID, pre-poulate the returned object with the
-    tags' fallback values, but *leave out fallback values that are `false`*. The most frequent use case is
-    thought to be the one where one has a fair number of tags, most of which only apply to a small-ish
-    subset of IDs. One will want to set the fallback value for all these tags to `false` and associate tags
-    selectively where they positively do apply. Then, when retrieving tags with `fallbacks: true`, an object
-    will be returned with only the explicit tags set as keys, and the implicitly `false` ones left out. This
-    being JavaScript, accessing `tags.foo` on an object `tags = { bar: true, }` will result in `undefined`,
-    which is a falsey value.
-  * `fallbacks: 'all'`: like `fallbacks: true` but does include even those fallback values that are `false`.
-    When retrieving tags with `fallbacks: 'all'`, the resulting object will always contain *all* registered
-    tags with their effective values.
-  * `fallbacks: false`: do not pre-populate the returned object of tag values.
+* [X] allow to set fallback handling at instantiation time
 
 
 
