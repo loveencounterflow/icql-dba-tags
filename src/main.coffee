@@ -247,8 +247,8 @@ class @Dtags
       { mode, tag, value, } = tag
       switch mode
         when '+' then R[ tag ] = value
-        # when '-' then delete R[ tag ]
-        when '-' then R[ tag ] = value
+        when '-' then delete R[ tag ]
+        # when '-' then R[ tag ] = value
         else throw new E.Dtags_unexpected '^dtags@780^', "unknown tag mode in #{rpr tag}"
     return R
 
