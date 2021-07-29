@@ -21,8 +21,6 @@ types                     = new ( require 'intertype' ).Intertype
   validate_list_of }      = types.export()
 # { to_width }              = require 'to-width'
 SQL                       = String.raw
-jr                        = JSON.stringify
-jp                        = JSON.parse
 { lets
   freeze }                = require 'letsfreezethat'
 E                         = require './errors'
@@ -177,7 +175,7 @@ class @Dtags
   add_tag: ( cfg ) ->
     validate.dbatags_add_tag_cfg cfg = { types.defaults.dbatags_add_tag_cfg..., cfg..., }
     cfg.value ?= true
-    cfg.value  = jr cfg.value
+    cfg.value  = JSON.stringify cfg.value
     @dba.run @sql.insert_tag, cfg
     @_clear_cache_for_range cfg
     return null
@@ -189,7 +187,7 @@ class @Dtags
   add_tagged_range: ( cfg ) ->
     validate.dbatags_add_tagged_range_cfg cfg = { types.defaults.dbatags_add_tagged_range_cfg..., cfg..., }
     cfg.value ?= if cfg.mode is '+' then true else false
-    cfg.value  = jr cfg.value
+    cfg.value  = JSON.stringify cfg.value
     @dba.run @sql.insert_tagged_range, cfg
     return null
 
@@ -203,7 +201,7 @@ class @Dtags
     validate.dbatags_tags_from_id_cfg cfg = { types.defaults.dbatags_tags_from_id_cfg..., cfg..., }
     { id, } = cfg
     R       = [ ( @dba.query @sql.cached_tags_from_id, cfg )..., ]
-    return jp R[ 0 ].tags if R.length > 0
+    return JSON.parse R[ 0 ].tags if R.length > 0
     R       = @tags_from_tagchain { tagchain: ( @tagchain_from_id cfg ), }
     @dba.run @sql.insert_cached_tags, { id, tags: ( jr R ), }
     return R
