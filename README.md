@@ -64,7 +64,9 @@
 
 * [ ] documentation
 * [X] allow to set fallback handling at instantiation time
-
-
+* [ ] implement 'region-wise markup' such that for a text (a sequence of IDs) we can derive a sequence
+  of the same IDs interspersed with on/off signals depending on the tags of the IDs (codepoints) involved.
+  The signals then can be, for example, transformed into nested HTML tags `<span class=mytag>...</span>`.
+* [ ] implement caching with contiguous ranges to replace caching by IDs
 
 
