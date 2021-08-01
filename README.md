@@ -68,5 +68,7 @@
   of the same IDs interspersed with on/off signals depending on the tags of the IDs (codepoints) involved.
   The signals then can be, for example, transformed into nested HTML tags `<span class=mytag>...</span>`.
 * [ ] implement caching with contiguous ranges to replace caching by IDs
-
+* [ ] consider to add table with `first_id`, `last_id` to enable
+  * sanity checks on IDs passed in (i.e. must be integer and within bounds)
+  * to build a cache of continuous tagged ranges tht covers all relevant IDs (Grundmenge / 'universe')
 
