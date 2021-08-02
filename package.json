@@ -24,7 +24,7 @@
   "homepage": "https://github.com/loveencounterflow/icql-dba-tags#readme",
   "dependencies": {
     "cnd": "^9.2.2",
-    "icql-dba": "7.0.2",
+    "icql-dba": "7.1.0",
     "intertype": "^7.6.7",
     "letsfreezethat": "^3.1.0"
   }
