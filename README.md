@@ -71,4 +71,4 @@
 * [ ] consider to add table with `first_id`, `last_id` to enable
   * sanity checks on IDs passed in (i.e. must be integer and within bounds)
   * to build a cache of continuous tagged ranges tht covers all relevant IDs (Grundmenge / 'universe')
-
+* [ ] restrict `prefix` setting to a small set of syntactically safe options such as `/[_a-z]+_/`
