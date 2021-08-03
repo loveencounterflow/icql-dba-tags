@@ -244,15 +244,11 @@ class @Dtags
     prv_tags      = null
     ids_and_tags  = []
     #.......................................................................................................
-    # debug '^3337^', id, rpr pi_ids
     for idx in [ 0 ... pi_ids.length - 1 ]
       id    = pi_ids[ idx ]
       tags  = JSON.stringify @tags_from_id { id, }
       continue if tags is prv_tags
-      # nxt_id    = pi_ids[ idx + 1 ] - 1
       prv_tags  = tags
-      # debug '^3337^', id, nxt_id, rpr tags
-      # debug '^3337^', id, rpr tags
       ids_and_tags.push { id, tags, }
     ids_and_tags.push { id: last_id, tags: null, }
     #.......................................................................................................
