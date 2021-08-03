@@ -13,6 +13,7 @@
 - [Data Structure](#data-structure)
 - [API](#api)
 - [To Do](#to-do)
+  - [Contiguous Ranges](#contiguous-ranges)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -64,11 +65,28 @@
 
 * [ ] documentation
 * [X] allow to set fallback handling at instantiation time
-* [ ] implement 'region-wise markup' such that for a text (a sequence of IDs) we can derive a sequence
-  of the same IDs interspersed with on/off signals depending on the tags of the IDs (codepoints) involved.
-  The signals then can be, for example, transformed into nested HTML tags `<span class=mytag>...</span>`.
-* [ ] implement caching with contiguous ranges to replace caching by IDs
 * [ ] consider to add table with `first_id`, `last_id` to enable
   * sanity checks on IDs passed in (i.e. must be integer and within bounds)
   * to build a cache of continuous tagged ranges tht covers all relevant IDs (Grundmenge / 'universe')
+  * could also become `dba` attributes?
 * [ ] restrict `prefix` setting to a small set of syntactically safe options such as `/[_a-z]+_/`
+
+### Contiguous Ranges
+
+The first version of `icql-dba-tags` used a per-ID cache table to avoid re-computing tags. This quickly
+becomes inefficient when the number of tags / tagged ranges is low compared to the number of IDs (certainly
+the case when dealing with the Unicode codespace which offers around 1e6 codepoints).
+
+To improve this, we instead implement a caching table with *minimal contiguous ID ranges*. This table can be
+computed from overlapping tagged ranges by walking through all the `lo` and `hi` endpoints of each range
+(these are the 'potential inflection points' where the resulting tags for a given ID might change) and then
+pruning adjacent ranges that turn out to result in the same set of tags as the previous one.
+
+* [ ] implement caching with contiguous ranges to replace caching by IDs
+* rewrite `tags_from_id()` to use
+  * a low-level method that only uses `tagged_ranges`
+  * a high-level method that ensures `contiguous_ranges` is up-to-date and uses only that table
+  * use boolean attribute on `dba` to track whether refreshment of `contiguous_ranges` is up-to-date
+* [ ] implement 'region-wise markup' such that for a text (a sequence of IDs) we can derive a sequence
+  of the same IDs interspersed with on/off signals depending on the tags of the IDs (codepoints) involved.
+  The signals then can be, for example, transformed into nested HTML tags `<span class=mytag>...</span>`.
