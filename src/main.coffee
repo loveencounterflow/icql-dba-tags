@@ -35,6 +35,8 @@ types.declare 'dbatags_constructor_cfg', tests:
     return true if x.prefix is ''
     return ( /^[_a-z][_a-z0-9]*$/ ).test x.prefix
   "x.fallbacks in [ true, false, 'all', ]": ( x ) -> x.fallbacks in [ true, false, 'all', ]
+  "@isa.integer x.first_id":  ( x ) -> @isa.integer x.first_id
+  "@isa.integer x.last_id":   ( x ) -> @isa.integer x.last_id
 
 #-----------------------------------------------------------------------------------------------------------
 types.declare 'dbatags_tag', tests:
@@ -54,19 +56,19 @@ types.declare 'dbatags_add_tag_cfg', tests:
 #-----------------------------------------------------------------------------------------------------------
 types.declare 'dbatags_add_tagged_range_cfg', tests:
   '@isa.object x':              ( x ) -> @isa.object x
-  '@isa.integer x.lo':          ( x ) -> @isa.integer x.lo
-  '@isa.integer x.hi':          ( x ) -> @isa.integer x.hi
+  '@isa.integer x.lo':          ( x ) -> @isa.integer x.lo ### TAINT add boundary check ###
+  '@isa.integer x.hi':          ( x ) -> @isa.integer x.hi ### TAINT add boundary check ###
   '@isa.dbatags_tag x.tag':     ( x ) -> @isa.dbatags_tag x.tag
 
 #-----------------------------------------------------------------------------------------------------------
 types.declare 'dbatags_tagchain_from_id_cfg', tests:
   '@isa.object x':              ( x ) -> @isa.object x
-  '@isa.integer x.id':          ( x ) -> @isa.integer x.id
+  '@isa.integer x.id':          ( x ) -> @isa.integer x.id ### TAINT add boundary check ###
 
 #-----------------------------------------------------------------------------------------------------------
 types.declare 'dbatags_tags_from_id_cfg', tests:
   '@isa.object x':              ( x ) -> @isa.object x
-  '@isa.integer x.id':          ( x ) -> @isa.integer x.id
+  '@isa.integer x.id':          ( x ) -> @isa.integer x.id ### TAINT add boundary check ###
 
 #-----------------------------------------------------------------------------------------------------------
 types.declare 'dbatags_parse_tagex_cfg', tests:
@@ -88,6 +90,8 @@ types.defaults =
     dba:        null
     prefix:     't_'
     fallbacks:  false
+    first_id:   0x000000
+    last_id:    0x10ffff
   dbatags_add_tag_cfg:
     nr:         null
     mode:       '+'
@@ -131,7 +135,9 @@ class @Dtags
 
   #---------------------------------------------------------------------------------------------------------
   _create_db_structure: ->
-    prefix = @cfg.prefix
+    { prefix
+      first_id
+      last_id   } = @cfg
     @dba.execute SQL"""
       create table if not exists #{prefix}tags (
           nr      integer not null,
@@ -157,8 +163,8 @@ class @Dtags
           primary key ( lo, hi ) );
       create view #{prefix}_potential_inflection_points as
         select id from ( select cast( null as integer ) as id where false
-          union select 0x000000 -- ### TAINT replace with first_id
-          union select 0x10ffff -- ### TAINT replace with last_id
+          union select #{first_id}
+          union select #{last_id}
           union select distinct lo      from t_tagged_ranges
           union select distinct hi + 1  from t_tagged_ranges )
         order by id asc;
