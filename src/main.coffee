@@ -126,8 +126,9 @@ class @Dtags
     else
       @dba  = new Dba()
     #.......................................................................................................
-    @cfg          = freeze @cfg
-    @_tag_max_nr  = 0
+    @cfg            = freeze @cfg
+    @_tag_max_nr    = 0
+    @_cache_filled  = false
     @_create_db_structure()
     @_compile_sql()
     @_create_sql_functions()
@@ -153,9 +154,6 @@ class @Dtags
       create index if not exists #{prefix}tags_nr_idx on #{prefix}tags          ( nr );
       create index if not exists #{prefix}idlohi_idx on  #{prefix}tagged_ranges ( lo, hi );
       create index if not exists #{prefix}idhi_idx on    #{prefix}tagged_ranges ( hi );
-      create table if not exists #{prefix}tagged_ids_cache (
-          id      integer not null primary key,
-          tags    json    not null );
       create table if not exists #{prefix}contiguous_ranges (
           lo      integer not null,
           hi      integer not null,
@@ -197,11 +195,8 @@ class @Dtags
       cached_tags_from_id: SQL"""
         select
             tags
-          from #{prefix}tagged_ids_cache
-          where id = $id;"""
-      insert_cached_tags: SQL"""
-        insert into #{prefix}tagged_ids_cache ( id, tags )
-          values ( $id, $tags );"""
+          from #{prefix}contiguous_ranges
+          where $id between lo and hi;"""
       get_fallbacks: SQL"""
         select * from #{prefix}tags
           order by nr;"""
@@ -237,7 +232,7 @@ class @Dtags
     return null
 
   #---------------------------------------------------------------------------------------------------------
-  create_minimal_contiguous_ranges: ->
+  _create_minimal_contiguous_ranges: ->
     pi_ids        = ( row.id for row from @dba.query @sql.potential_inflection_points )
     last_idx      = pi_ids.length - 1
     last_id       = pi_ids[ last_idx ]
@@ -246,7 +241,7 @@ class @Dtags
     #.......................................................................................................
     for idx in [ 0 ... pi_ids.length - 1 ]
       id    = pi_ids[ idx ]
-      tags  = JSON.stringify @tags_from_id { id, }
+      tags  = JSON.stringify @_tags_from_id_uncached { id, }
       continue if tags is prv_tags
       prv_tags  = tags
       ids_and_tags.push { id, tags, }
@@ -259,11 +254,13 @@ class @Dtags
       tags  = entry.tags
       @dba.run @sql.insert_contiguous_range, { lo, hi, tags, }
     #.......................................................................................................
+    @_cache_filled = true
     return null
 
   #---------------------------------------------------------------------------------------------------------
   _on_add_tagged_range: ->
     @dba.execute @sql.truncate_contiguous_ranges
+    @_cache_filled = false
     return null
 
   #---------------------------------------------------------------------------------------------------------
@@ -301,14 +298,18 @@ class @Dtags
     return R
 
   #---------------------------------------------------------------------------------------------------------
-  tags_from_id: ( cfg ) ->
+  _tags_from_id_uncached: ( cfg ) ->
     validate.dbatags_tags_from_id_cfg cfg = { types.defaults.dbatags_tags_from_id_cfg..., cfg..., }
     { id, } = cfg
-    R       = [ ( @dba.query @sql.cached_tags_from_id, cfg )..., ]
-    return JSON.parse R[ 0 ].tags if R.length > 0
     R       = @get_filtered_fallbacks()
     Object.assign R, @tags_from_tagchain { tagchain: ( @tagchain_from_id cfg ), }
-    @dba.run @sql.insert_cached_tags, { id, tags: ( JSON.stringify R ), }
+    return R
+
+  #---------------------------------------------------------------------------------------------------------
+  tags_from_id: ( cfg ) ->
+    @_create_minimal_contiguous_ranges() unless @_cache_filled
+    validate.dbatags_tags_from_id_cfg cfg = { types.defaults.dbatags_tags_from_id_cfg..., cfg..., }
+    return JSON.parse @dba.first_value @dba.query @sql.cached_tags_from_id, cfg
     return R
 
   #---------------------------------------------------------------------------------------------------------
