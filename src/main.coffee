@@ -24,6 +24,7 @@ SQL                       = String.raw
 { lets
   freeze }                = require 'letsfreezethat'
 E                         = require './errors'
+{ Dba, }                  = require 'icql-dba'
 
 
 #===========================================================================================================
@@ -114,16 +115,50 @@ class @Dtags
   #---------------------------------------------------------------------------------------------------------
   constructor: ( cfg ) ->
     validate.dbatags_constructor_cfg @cfg = { types.defaults.dbatags_constructor_cfg..., cfg..., }
+    #.......................................................................................................
     if @cfg.dba?
+      # debug '^4453334-1^'
       @dba  = @cfg.dba
       delete @cfg.dba
     else
-      @dba  = new ( require 'icql-dba' ).Dba()
+      # debug '^4453334-2^'
+      @dba  = new Dba()
+    # #.......................................................................................................
+    # if @cfg.dba2?
+    #   debug '^4453334-3^'
+    #   @dba2 = @cfg.dba2
+    #   delete @cfg.dba2
+    # else
+    #   debug '^4453334-4^'
+    #   @dba2 = new Dba()
+    #   ### TAINT won't work with paths set to '' or ':memory:' ###
+    #   @dba2.open { path: @dba.sqlt.name, }
+    #   debug '^34342^', rpr @dba.sqlt.name
+    #   debug '^34342^', rpr @dba2.sqlt.name
+    #.......................................................................................................
     @cfg          = freeze @cfg
+    # @_assert_dba_and_dba2_refer_to_same_db()
     @_tag_max_nr  = 0
     @_create_db_structure()
     @_compile_sql()
+    @_create_sql_functions()
     return undefined
+
+  # #---------------------------------------------------------------------------------------------------------
+  # _assert_dba_and_dba2_refer_to_same_db: ->
+  #   debug '^3443^', @dba.sqlt
+  #   debug '^3443^', @dba.sqlt.name
+  #   debug '^3443^', @dba2.sqlt
+  #   debug '^3443^', @dba2.sqlt.name
+  #   rnd = Math.floor Math.random() * 1e18
+  #   @dba.execute SQL"drop table if exists #{@cfg.prefix}_test;"
+  #   @dba.execute SQL"create table #{@cfg.prefix}_test ( id integer );"
+  #   @dba.run SQL"insert into #{@cfg.prefix}_test values ( ? );", rnd
+  #   r1  = @dba.list @dba.query    SQL"select id from #{@cfg.prefix}_test;"
+  #   r2  = @dba2.list @dba2.query  SQL"select id from #{@cfg.prefix}_test;"
+  #   debug '^33443^', { r1, r2, }
+  #   @dba.execute SQL"drop table #{@cfg.prefix}_test;"
+  #   return null
 
   #---------------------------------------------------------------------------------------------------------
   _create_db_structure: ->
@@ -180,6 +215,21 @@ class @Dtags
       get_fallbacks: SQL"""
         select * from #{x}tags
           order by nr;"""
+    return null
+
+  #---------------------------------------------------------------------------------------------------------
+  _create_sql_functions: ->
+    x = @cfg.prefix
+    #.......................................................................................................
+    @dba.create_function
+      name:           "#{x}_tags_from_id",
+      deterministic:  true,
+      varargs:        false,
+      call:           ( id ) =>
+        fallbacks = @get_filtered_fallbacks()
+        tagchain  = @tagchain_from_id { id, }
+        tags      = @tags_from_tagchain { tagchain, }
+        return JSON.stringify { fallbacks..., tags..., }
     return null
 
   #---------------------------------------------------------------------------------------------------------
