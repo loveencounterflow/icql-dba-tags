@@ -131,23 +131,23 @@ class @Dtags
 
   #---------------------------------------------------------------------------------------------------------
   _create_db_structure: ->
-    x = @cfg.prefix
+    prefix = @cfg.prefix
     @dba.execute SQL"""
-      create table if not exists #{x}tags (
+      create table if not exists #{prefix}tags (
           nr      integer not null,
           tag     text    not null primary key,
           value   json    not null default 'true' );
-      create table if not exists #{x}tagged_ranges (
+      create table if not exists #{prefix}tagged_ranges (
           nr      integer not null primary key,
           lo      integer not null,
           hi      integer not null,
           mode    boolean not null,
-          tag     text    not null references #{x}tags ( tag ),
+          tag     text    not null references #{prefix}tags ( tag ),
           value   json    not null );
-      create index if not exists #{x}tags_nr_idx on #{x}tags          ( nr );
-      create index if not exists #{x}idlohi_idx on  #{x}tagged_ranges ( lo, hi );
-      create index if not exists #{x}idhi_idx on    #{x}tagged_ranges ( hi );
-      create table if not exists #{x}tagged_ids_cache (
+      create index if not exists #{prefix}tags_nr_idx on #{prefix}tags          ( nr );
+      create index if not exists #{prefix}idlohi_idx on  #{prefix}tagged_ranges ( lo, hi );
+      create index if not exists #{prefix}idhi_idx on    #{prefix}tagged_ranges ( hi );
+      create table if not exists #{prefix}tagged_ids_cache (
           id      integer not null primary key,
           tags    json    not null );
       """
@@ -155,14 +155,14 @@ class @Dtags
 
   #---------------------------------------------------------------------------------------------------------
   _compile_sql: ->
-    x = @cfg.prefix
+    prefix = @cfg.prefix
     @sql =
       insert_tag: SQL"""
-        insert into #{x}tags ( nr, tag, value )
+        insert into #{prefix}tags ( nr, tag, value )
           values ( $nr, $tag, $value );"""
           # on conflict ( tag ) do nothing;"""
       insert_tagged_range: SQL"""
-        insert into #{x}tagged_ranges ( lo, hi, mode, tag, value )
+        insert into #{prefix}tagged_ranges ( lo, hi, mode, tag, value )
           values ( $lo, $hi, $mode, $tag, $value )"""
       tagchain_from_id: SQL"""
         select
@@ -170,28 +170,28 @@ class @Dtags
             mode,
             tag,
             value
-          from #{x}tagged_ranges
+          from #{prefix}tagged_ranges
           where $id between lo and hi
           order by nr asc;"""
       cached_tags_from_id: SQL"""
         select
             tags
-          from #{x}tagged_ids_cache
+          from #{prefix}tagged_ids_cache
           where id = $id;"""
       insert_cached_tags: SQL"""
-        insert into #{x}tagged_ids_cache ( id, tags )
+        insert into #{prefix}tagged_ids_cache ( id, tags )
           values ( $id, $tags );"""
       get_fallbacks: SQL"""
-        select * from #{x}tags
+        select * from #{prefix}tags
           order by nr;"""
     return null
 
   #---------------------------------------------------------------------------------------------------------
   _create_sql_functions: ->
-    # x = @cfg.prefix
+    # prefix = @cfg.prefix
     # #.......................................................................................................
     # @dba.create_function
-    #   name:           "#{x}_tags_from_id",
+    #   name:           "#{prefix}_tags_from_id",
     #   deterministic:  true,
     #   varargs:        false,
     #   call:           ( id ) =>
