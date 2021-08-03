@@ -150,6 +150,18 @@ class @Dtags
       create table if not exists #{prefix}tagged_ids_cache (
           id      integer not null primary key,
           tags    json    not null );
+      create table if not exists #{prefix}contiguous_ranges (
+          lo      integer not null,
+          hi      integer not null,
+          tags    json    not null,
+          primary key ( lo, hi ) );
+      create view #{prefix}_potential_inflection_points as
+        select id from ( select cast( null as integer ) as id where false
+          union select 0x000000 -- ### TAINT replace with first_id
+          union select 0x10ffff -- ### TAINT replace with last_id
+          union select distinct lo      from t_tagged_ranges
+          union select distinct hi + 1  from t_tagged_ranges )
+        order by id asc;
       """
     return null
 
@@ -164,6 +176,9 @@ class @Dtags
       insert_tagged_range: SQL"""
         insert into #{prefix}tagged_ranges ( lo, hi, mode, tag, value )
           values ( $lo, $hi, $mode, $tag, $value )"""
+      insert_contiguous_range: SQL"""
+        insert into #{prefix}contiguous_ranges ( lo, hi, tags )
+          values ( $lo, $hi, $tags )"""
       tagchain_from_id: SQL"""
         select
             nr,
@@ -184,6 +199,8 @@ class @Dtags
       get_fallbacks: SQL"""
         select * from #{prefix}tags
           order by nr;"""
+      truncate_contiguous_ranges: SQL"""
+        delete from #{prefix}contiguous_ranges;"""
     return null
 
   #---------------------------------------------------------------------------------------------------------
@@ -209,17 +226,19 @@ class @Dtags
     @_tag_max_nr++
     cfg.nr     = @_tag_max_nr
     @dba.run @sql.insert_tag, cfg
-    @_clear_cache_for_range cfg
     return null
 
   #---------------------------------------------------------------------------------------------------------
-  _clear_cache_for_range: ( cfg ) ->
+  _on_add_tagged_range: ->
+    @dba.execute @sql.truncate_contiguous_ranges
+    return null
 
   #---------------------------------------------------------------------------------------------------------
   add_tagged_range: ( cfg ) ->
     validate.dbatags_add_tagged_range_cfg cfg = { types.defaults.dbatags_add_tagged_range_cfg..., cfg..., }
     cfg.value ?= if cfg.mode is '+' then true else false
     cfg.value  = JSON.stringify cfg.value
+    @_on_add_tagged_range()
     @dba.run @sql.insert_tagged_range, cfg
     return null
 
