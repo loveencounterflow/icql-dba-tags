@@ -82,8 +82,8 @@ computed from overlapping tagged ranges by walking through all the `lo` and `hi`
 (these are the 'potential inflection points' where the resulting tags for a given ID might change) and then
 pruning adjacent ranges that turn out to result in the same set of tags as the previous one.
 
-* [ ] implement caching with contiguous ranges to replace caching by IDs
-* rewrite `tags_from_id()` to use
+* [X] implement caching with contiguous ranges to replace caching by IDs
+* [X] rewrite `tags_from_id()` to use
   * a low-level method that only uses `tagged_ranges`
   * a high-level method that ensures `contiguous_ranges` is up-to-date and uses only that table
   * use boolean attribute on `dba` to track whether refreshment of `contiguous_ranges` is up-to-date
