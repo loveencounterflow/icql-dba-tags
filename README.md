@@ -90,3 +90,22 @@ pruning adjacent ranges that turn out to result in the same set of tags as the p
 * [ ] implement 'region-wise markup' such that for a text (a sequence of IDs) we can derive a sequence
   of the same IDs interspersed with on/off signals depending on the tags of the IDs (codepoints) involved.
   The signals then can be, for example, transformed into nested HTML tags `<span class=mytag>...</span>`.
+
+The `#{prefix}contiguous_ranges` table has to satisfy the following (partially redundant) invariants in
+order to be valid:
+
+  * All rows have fields `lo`, `hi`, and `tags`
+  * If no tagged ranges are present, the table must be empty; conversely, if there are any tagged ranges,
+    the table may be empty as long as `dtags._cache_filled` is `false`; otherwise, when
+    `dtags._cache_filled` is `true`, the table must have at least one row.
+  * There must be exactly one row whose `lo` value equals `dtags.cfg.first_id`.
+  * There must be exactly one row whose `hi` value equals `dtags.cfg.last_id`.
+  * In each row, both `lo` and `hi` must be integers between `dtags.cfg.first_id` and `dtags.cfg.last_id`,
+    inclusively.
+  * In each row, `lo` must be smaller or equal to `hi`.
+  * For each row whose `lo` value is greater than `dtags.cfg.first_id`, there must be exactly one row whose
+    `hi` value equals `lo - 1`.
+  * For each row whose `hi` value is smaller than `dtags.cfg.last_id`, there must be exactly one row whose
+    `lo` value equals `hi + 1`.
+  * For each integer `id` between `dtags.cfg.first_id` and `dtags.cfg.last_id`, there is exactly one row for
+    which `id` is between `lo` and `hi`, inclusively.
