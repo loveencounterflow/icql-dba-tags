@@ -196,7 +196,8 @@ class @Dtags
         select
             tags
           from #{prefix}contiguous_ranges
-          where $id between lo and hi;"""
+          where $id between lo and hi
+          limit 1;"""
       get_fallbacks: SQL"""
         select * from #{prefix}tags
           order by nr;"""
