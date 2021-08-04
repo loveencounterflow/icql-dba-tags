@@ -126,9 +126,10 @@ class @Dtags
     else
       @dba  = new Dba()
     #.......................................................................................................
-    @cfg            = freeze @cfg
-    @_tag_max_nr    = 0
-    @_cache_filled  = false
+    @cfg              = freeze @cfg
+    @_tag_max_nr      = 0
+    @_cache_filled    = false
+    @_text_regions_re = null ### TAINT mark cached value or collect in @_cache ###
     @_create_db_structure()
     @_compile_sql()
     @_create_sql_functions()
@@ -285,7 +286,8 @@ class @Dtags
   #---------------------------------------------------------------------------------------------------------
   _on_add_tagged_range: ->
     @dba.execute @sql.truncate_contiguous_ranges
-    @_cache_filled = false
+    @_text_regions_re = null ### TAINT mark cached value or collect in `@cache` ###
+    @_cache_filled    = false
     return null
 
   #---------------------------------------------------------------------------------------------------------
@@ -388,5 +390,48 @@ class @Dtags
     tagchain = ( ( @parse_tagex { tagex, } ) for tagex in cfg.tagexchain )
     return @tags_from_tagchain { tagchain, }
 
+  #---------------------------------------------------------------------------------------------------------
+  _chr_class_from_range: ( range ) ->
+    ### TAINT make addition of spaces configurable, e.g. as `all_groups_extra: '\\s'`  ###
+    [ lo, hi, ] = range
+    return "\\u{#{lo.toString 16}}" if lo is hi
+    return "\\u{#{lo.toString 16}}-\\u{#{hi.toString 16}}"
+
+  #---------------------------------------------------------------------------------------------------------
+  _build_text_regions_re: ->
+    nr    = 0
+    parts = []
+    for { ranges, tags, } from @dba.query SQL"select * from #{@cfg.prefix}tags_and_rangelists;"
+      nr++
+      ranges = JSON.parse ranges
+      ranges = ( ( @_chr_class_from_range range ) for range in ranges ).join ''
+      parts.push "(?<g#{nr}>[#{ranges}]+)"
+    parts = parts.join '|'
+    return @_text_regions_re = new RegExp parts, 'gu'
+
+  #---------------------------------------------------------------------------------------------------------
+  find_tagged_regions: ( text ) ->
+    re    = @_text_regions_re ? @_build_text_regions_re()
+    # debug '^33436^', re
+    R     = []
+    stop  = 0
+    #.......................................................................................................
+    for match from text.matchAll re
+      { index: start, } = match
+      for key, part of match.groups
+        break if part?
+      if start > stop
+        part      = text[ stop ... start ]
+        # warn stop, start, CND.reverse rpr part
+        new_stop  = start + part.length
+        R.push { key: 'missing', start: stop, stop: new_stop, part, }
+        stop      = new_stop
+        continue
+      #.....................................................................................................
+      stop += part.length
+      # info start, stop, key, rpr part
+      R.push { key, start, stop, part, }
+    #.......................................................................................................
+    return R
 
 
