@@ -209,7 +209,7 @@ class @Dtags
 
   #---------------------------------------------------------------------------------------------------------
   _create_sql_functions: ->
-    # prefix = @cfg.prefix
+    prefix = @cfg.prefix
     # #.......................................................................................................
     # @dba.create_function
     #   name:           "#{prefix}_tags_from_id",
@@ -220,6 +220,23 @@ class @Dtags
     #     tagchain  = @tagchain_from_id { id, }
     #     tags      = @tags_from_tagchain { tagchain, }
     #     return JSON.stringify { fallbacks..., tags..., }
+    #.......................................................................................................
+    ### TAINT put these into separate module like `icql-dba-standard` ###
+    @dba.create_window_function
+      name:           prefix + 'collect'
+      varargs:        false
+      start:          -> []
+      step:           ( total, element ) -> total.push element; total
+      inverse:        ( total, dropped ) -> total.pop(); total
+      result:         ( total ) -> JSON.stringify total
+    #.......................................................................................................
+    @dba.create_window_function
+      name:           prefix + 'collect_many'
+      varargs:        true
+      start:          -> []
+      step:           ( total, elements... ) -> total.push elements; total
+      inverse:        ( total, dropped ) -> total.pop(); total
+      result:         ( total ) -> JSON.stringify total
     return null
 
   #---------------------------------------------------------------------------------------------------------
