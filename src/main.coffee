@@ -166,6 +166,13 @@ class @Dtags
           union select distinct lo      from t_tagged_ranges
           union select distinct hi + 1  from t_tagged_ranges )
         order by id asc;
+      create view #{prefix}tags_and_rangelists as
+        select
+          tags                            as tags,
+          #{prefix}collect_many( lo, hi ) as ranges
+        from #{prefix}contiguous_ranges
+        group by tags
+        order by tags;
       """
     return null
 
