@@ -129,7 +129,7 @@ class @Dtags
     @cfg              = freeze @cfg
     @_tag_max_nr      = 0
     @_cache_filled    = false
-    @_text_regions_re = null ### TAINT mark cached value or collect in @_cache ###
+    @_text_regions_re = null ### TAINT implicit cache interaction ###
     @_create_db_structure()
     @_compile_sql()
     @_create_sql_functions()
@@ -259,39 +259,6 @@ class @Dtags
     return null
 
   #---------------------------------------------------------------------------------------------------------
-  _create_minimal_contiguous_ranges: ->
-    pi_ids        = ( row.id for row from @dba.query @sql.potential_inflection_points )
-    last_idx      = pi_ids.length - 1
-    last_id       = pi_ids[ last_idx ]
-    prv_tags      = null
-    ids_and_tags  = []
-    #.......................................................................................................
-    for idx in [ 0 ... pi_ids.length - 1 ]
-      id    = pi_ids[ idx ]
-      tags  = JSON.stringify @_tags_from_id_uncached { id, }
-      continue if tags is prv_tags
-      prv_tags  = tags
-      ids_and_tags.push { id, tags, }
-    ids_and_tags.push { id: last_id, tags: null, }
-    #.......................................................................................................
-    for idx in [ 0 ... ids_and_tags.length - 1 ]
-      entry = ids_and_tags[ idx ]
-      lo    = entry.id
-      hi    = ids_and_tags[ idx + 1 ].id - 1
-      tags  = entry.tags
-      @dba.run @sql.insert_contiguous_range, { lo, hi, tags, }
-    #.......................................................................................................
-    @_cache_filled = true
-    return null
-
-  #---------------------------------------------------------------------------------------------------------
-  _on_add_tagged_range: ->
-    @dba.execute @sql.truncate_contiguous_ranges
-    @_text_regions_re = null ### TAINT mark cached value or collect in `@cache` ###
-    @_cache_filled    = false
-    return null
-
-  #---------------------------------------------------------------------------------------------------------
   add_tagged_range: ( cfg ) ->
     validate.dbatags_add_tagged_range_cfg cfg = { types.defaults.dbatags_add_tagged_range_cfg..., cfg..., }
     cfg.value ?= if cfg.mode is '+' then true else false
@@ -395,11 +362,54 @@ class @Dtags
   #=========================================================================================================
   # TAGGED TEXT REGIONS
   #---------------------------------------------------------------------------------------------------------
+  _on_add_tagged_range: ->
+    ### TAINT implicit cache interaction ###
+    @dba.execute @sql.truncate_contiguous_ranges
+    @_text_regions_re = null ### TAINT mark cached value or collect in `@cache` ###
+    @_cache_filled    = false
+    return null
+
+  #---------------------------------------------------------------------------------------------------------
+  _create_minimal_contiguous_ranges: ->
+    @_on_add_tagged_range() ### TAINT implicit cache interaction ###
+    pi_ids        = ( row.id for row from @dba.query @sql.potential_inflection_points )
+    last_idx      = pi_ids.length - 1
+    last_id       = pi_ids[ last_idx ]
+    prv_tags      = null
+    ids_and_tags  = []
+    #.......................................................................................................
+    for idx in [ 0 ... pi_ids.length - 1 ]
+      id    = pi_ids[ idx ]
+      tags  = JSON.stringify @_tags_from_id_uncached { id, }
+      continue if tags is prv_tags
+      prv_tags  = tags
+      ids_and_tags.push { id, tags, }
+    ids_and_tags.push { id: last_id, tags: null, }
+    #.......................................................................................................
+    for idx in [ 0 ... ids_and_tags.length - 1 ]
+      entry = ids_and_tags[ idx ]
+      lo    = entry.id
+      hi    = ids_and_tags[ idx + 1 ].id - 1
+      tags  = entry.tags
+      @dba.run @sql.insert_contiguous_range, { lo, hi, tags, }
+    #.......................................................................................................
+    @_cache_filled = true ### TAINT implicit cache interaction ###
+    return null
+
+  #---------------------------------------------------------------------------------------------------------
   _chr_class_from_range: ( range ) ->
     ### TAINT make addition of spaces configurable, e.g. as `all_groups_extra: '\\s'`  ###
     [ lo, hi, ] = range
     return "\\u{#{lo.toString 16}}" if lo is hi
     return "\\u{#{lo.toString 16}}-\\u{#{hi.toString 16}}"
+
+  #---------------------------------------------------------------------------------------------------------
+  get_tagsets_by_keys: ->
+    @_create_minimal_contiguous_ranges() unless @_cache_filled ### TAINT implicit cache interaction ###
+    R = {}
+    for { key, tags, } from @dba.query SQL"select * from #{@cfg.prefix}tags_and_rangelists;"
+      R[ key ] = JSON.parse tags
+    return R
 
   #---------------------------------------------------------------------------------------------------------
   _build_text_regions_re: ->
@@ -413,7 +423,7 @@ class @Dtags
 
   #---------------------------------------------------------------------------------------------------------
   find_tagged_regions: ( text ) ->
-    re    = @_text_regions_re ? @_build_text_regions_re()
+    re    = @_text_regions_re ? @_build_text_regions_re() ### TAINT implicit cache interaction ###
     # debug '^33436^', re
     R     = []
     stop  = 0
