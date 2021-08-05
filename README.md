@@ -87,7 +87,7 @@ pruning adjacent ranges that turn out to result in the same set of tags as the p
   * a low-level method that only uses `tagged_ranges`
   * a high-level method that ensures `contiguous_ranges` is up-to-date and uses only that table
   * use boolean attribute on `dba` to track whether refreshment of `contiguous_ranges` is up-to-date
-* [ ] implement 'region-wise markup' such that for a text (a sequence of IDs) we can derive a sequence
+* [X] implement 'region-wise markup' such that for a text (a sequence of IDs) we can derive a sequence
   of the same IDs interspersed with on/off signals depending on the tags of the IDs (codepoints) involved.
   The signals then can be, for example, transformed into nested HTML tags `<span class=mytag>...</span>`.
 
@@ -109,3 +109,9 @@ order to be valid:
     `lo` value equals `hi + 1`.
   * For each integer `id` between `dtags.cfg.first_id` and `dtags.cfg.last_id`, there is exactly one row for
     which `id` is between `lo` and `hi`, inclusively.
+
+* [ ] improve the parts marked with `### TAINT implicit cache interaction ###` to use a less convoluted
+  caching schema
+  * [ ] use a key/value table to store cached values instead of putting them into instance variables
+
+
