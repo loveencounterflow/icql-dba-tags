@@ -164,8 +164,8 @@ class @Dtags
         select id from ( select cast( null as integer ) as id where false
           union select #{first_id}
           union select #{last_id}
-          union select distinct lo      from t_tagged_ranges
-          union select distinct hi + 1  from t_tagged_ranges )
+          union select distinct lo      from #{prefix}tagged_ranges
+          union select distinct hi + 1  from #{prefix}tagged_ranges )
         order by id asc;
       create view #{prefix}tags_and_rangelists as
         select
