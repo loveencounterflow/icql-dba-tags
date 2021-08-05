@@ -371,6 +371,9 @@ class @Dtags
 
   #---------------------------------------------------------------------------------------------------------
   _create_minimal_contiguous_ranges: ->
+    ### Iterate over all potential inflection points (the boundaries of all tagged ranges) to find at which
+    points an actual change in the tagset occurs; these endpoints are then (together with the tagsets)
+    inserted into table `t_contiguous_ranges`. ###
     @_on_add_tagged_range() ### TAINT implicit cache interaction ###
     pi_ids        = ( row.id for row from @dba.query @sql.potential_inflection_points )
     last_idx      = pi_ids.length - 1
