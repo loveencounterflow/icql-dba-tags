@@ -214,6 +214,12 @@ class @Dtags
         select id from #{prefix}_potential_inflection_points;"""
       truncate_contiguous_ranges: SQL"""
         delete from #{prefix}contiguous_ranges;"""
+      get_contiguous_ranges: SQL"""
+        select * from #{prefix}contiguous_ranges order by lo, hi, tags;"""
+      get_tagged_ranges: SQL"""
+        select nr, lo, hi, mode, tag, value
+        from #{@cfg.prefix}tagged_ranges
+        order by nr;"""
     return null
 
   #---------------------------------------------------------------------------------------------------------
@@ -277,37 +283,6 @@ class @Dtags
     return null
 
   #---------------------------------------------------------------------------------------------------------
-  get_tags: ->
-    R   = {}
-    sql = SQL"select nr, tag, value as fallback from #{@cfg.prefix}tags order by nr;"
-    for { nr, tag, fallback, } from @dba.query sql
-      R[ tag ] = { nr, fallback, }
-    return R
-
-  #---------------------------------------------------------------------------------------------------------
-  get_tagged_ranges: ->
-    return @dba.list @dba.query SQL"""
-      select nr, lo, hi, mode, tag, value
-      from #{@cfg.prefix}tagged_ranges
-      order by nr;"""
-
-  #---------------------------------------------------------------------------------------------------------
-  get_filtered_fallbacks: ->
-    return {} if @cfg.fallbacks is false
-    R = @get_fallbacks()
-    return R if @cfg.fallbacks is 'all'
-    for tag, value of R
-      delete R[ tag ] if value is false
-    return R
-
-  #---------------------------------------------------------------------------------------------------------
-  get_fallbacks: ->
-    R = {}
-    for row from @dba.query @sql.get_fallbacks
-      R[ row.tag ] = JSON.parse row.value
-    return R
-
-  #---------------------------------------------------------------------------------------------------------
   tagchain_from_id: ( cfg ) ->
     validate.dbatags_tagchain_from_id_cfg cfg = { types.defaults.dbatags_tagchain_from_id_cfg..., cfg..., }
     R = []
@@ -326,6 +301,7 @@ class @Dtags
 
   #---------------------------------------------------------------------------------------------------------
   tags_from_id: ( cfg ) ->
+    ### TAINT implicit cache interaction ###
     @_create_minimal_contiguous_ranges() unless @_cache_filled
     validate.dbatags_tags_from_id_cfg cfg = { types.defaults.dbatags_tags_from_id_cfg..., cfg..., }
     return JSON.parse @dba.first_value @dba.query @sql.cached_tags_from_id, cfg
@@ -473,4 +449,47 @@ class @Dtags
     #.......................................................................................................
     return R
 
+  #=========================================================================================================
+  # TABLE GETTERS
+  #---------------------------------------------------------------------------------------------------------
+  get_tags: ->
+    R   = {}
+    sql = SQL"select nr, tag, value as fallback from #{@cfg.prefix}tags order by nr;"
+    for { nr, tag, fallback, } from @dba.query sql
+      R[ tag ] = { nr, fallback, }
+    return R
+
+  #---------------------------------------------------------------------------------------------------------
+  get_tagged_ranges: ->
+    R = []
+    for { nr, lo, hi, mode, tag, value, } from @dba.query @sql.get_tagged_ranges
+      value = JSON.parse value
+      R.push { nr, lo, hi, mode, tag, value, }
+    return R
+
+  #---------------------------------------------------------------------------------------------------------
+  get_filtered_fallbacks: ->
+    return {} if @cfg.fallbacks is false
+    R = @get_fallbacks()
+    return R if @cfg.fallbacks is 'all'
+    for tag, value of R
+      delete R[ tag ] if value is false
+    return R
+
+  #---------------------------------------------------------------------------------------------------------
+  get_fallbacks: ->
+    R = {}
+    for row from @dba.query @sql.get_fallbacks
+      R[ row.tag ] = JSON.parse row.value
+    return R
+
+  #---------------------------------------------------------------------------------------------------------
+  get_continuous_ranges: ( cfg ) ->
+    ### TAINT implicit cache interaction ###
+    @_create_minimal_contiguous_ranges() unless @_cache_filled
+    R = []
+    for { lo, hi, tags, } from @dba.query @sql.get_contiguous_ranges
+      tags = JSON.parse tags
+      R.push { lo, hi, tags, }
+    return R
 
