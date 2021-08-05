@@ -85,6 +85,11 @@ types.declare 'dbatags_tags_from_tagexchain_cfg', tests:
   '@isa.object x':              ( x ) -> @isa.object x
 
 #-----------------------------------------------------------------------------------------------------------
+types.declare 'dbatags_markup_text_cfg', tests:
+  '@isa.object x':              ( x ) -> @isa.object x
+  '@isa.text x.text':           ( x ) -> @isa.text x.text
+
+#-----------------------------------------------------------------------------------------------------------
 types.defaults =
   dbatags_constructor_cfg:
     dba:        null
