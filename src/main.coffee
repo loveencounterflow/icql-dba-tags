@@ -169,6 +169,7 @@ class @Dtags
         order by id asc;
       create view #{prefix}tags_and_rangelists as
         select
+          'g' || row_number() over ()     as key,
           tags                            as tags,
           #{prefix}collect_many( lo, hi ) as ranges
         from #{prefix}contiguous_ranges
@@ -390,6 +391,9 @@ class @Dtags
     tagchain = ( ( @parse_tagex { tagex, } ) for tagex in cfg.tagexchain )
     return @tags_from_tagchain { tagchain, }
 
+
+  #=========================================================================================================
+  # TAGGED TEXT REGIONS
   #---------------------------------------------------------------------------------------------------------
   _chr_class_from_range: ( range ) ->
     ### TAINT make addition of spaces configurable, e.g. as `all_groups_extra: '\\s'`  ###
@@ -399,13 +403,11 @@ class @Dtags
 
   #---------------------------------------------------------------------------------------------------------
   _build_text_regions_re: ->
-    nr    = 0
     parts = []
-    for { ranges, tags, } from @dba.query SQL"select * from #{@cfg.prefix}tags_and_rangelists;"
-      nr++
+    for { key, tags, ranges, } from @dba.query SQL"select * from #{@cfg.prefix}tags_and_rangelists;"
       ranges = JSON.parse ranges
       ranges = ( ( @_chr_class_from_range range ) for range in ranges ).join ''
-      parts.push "(?<g#{nr}>[#{ranges}]+)"
+      parts.push "(?<#{key}>[#{ranges}]+)"
     parts = parts.join '|'
     return @_text_regions_re = new RegExp parts, 'gu'
 
