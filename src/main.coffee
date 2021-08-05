@@ -277,6 +277,21 @@ class @Dtags
     return null
 
   #---------------------------------------------------------------------------------------------------------
+  get_tags: ->
+    R   = {}
+    sql = SQL"select nr, tag, value as fallback from #{@cfg.prefix}tags order by nr;"
+    for { nr, tag, fallback, } from @dba.query sql
+      R[ tag ] = { nr, fallback, }
+    return R
+
+  #---------------------------------------------------------------------------------------------------------
+  get_tagged_ranges: ->
+    return @dba.list @dba.query SQL"""
+      select nr, lo, hi, mode, tag, value
+      from #{@cfg.prefix}tagged_ranges
+      order by nr;"""
+
+  #---------------------------------------------------------------------------------------------------------
   get_filtered_fallbacks: ->
     return {} if @cfg.fallbacks is false
     R = @get_fallbacks()
