@@ -2,13 +2,13 @@ lockfileVersion: 5.3
 
 specifiers:
   cnd: ^9.2.2
-  icql-dba: 7.1.0
+  icql-dba: 7.2.0
   intertype: ^7.6.7
   letsfreezethat: ^3.1.0
 
 dependencies:
   cnd: 9.2.2
-  icql-dba: 7.1.0
+  icql-dba: 7.2.0
   intertype: 7.6.7
   letsfreezethat: 3.1.0
 
@@ -190,8 +190,8 @@ packages:
       intertype: 7.6.5
     dev: false
 
-  /icql-dba/7.1.0:
-    resolution: {integrity: sha512-icOuMwnCO48QrN8NvFZ9Fc7eICCpuYFRrhp+A6R94klSe4mFIOuKMvj/woGruCqfUb1uElgkdFVUzp29zC3nJQ==}
+  /icql-dba/7.2.0:
+    resolution: {integrity: sha512-LYBNHL1U1Xo+Xx93Lm3ZLh9I+E5j1oa/mPM07BMQyAOehClXpbM5/1UXEGvqDZYzGVZ9BlKKbkYHKcqjMBeb6w==}
     requiresBuild: true
     dependencies:
       cnd: 9.2.2
