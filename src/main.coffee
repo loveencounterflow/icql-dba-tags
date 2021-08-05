@@ -218,7 +218,8 @@ class @Dtags
 
   #---------------------------------------------------------------------------------------------------------
   _create_sql_functions: ->
-    prefix = @cfg.prefix
+    prefix  = @cfg.prefix
+    @f      = {}
     # #.......................................................................................................
     # @dba.create_function
     #   name:           "#{prefix}_tags_from_id",
@@ -246,6 +247,14 @@ class @Dtags
       step:           ( total, elements... ) -> total.push elements; total
       inverse:        ( total, dropped ) -> total.pop(); total
       result:         ( total ) -> JSON.stringify total
+    #.......................................................................................................
+    @f.cid_from_chr = ( chr ) -> chr.codePointAt 0
+    @f.chr_from_cid = ( cid ) -> String.fromCodePoint cid
+    @f.to_hex       = ( cid ) -> '0x' + cid.toString 16
+    @dba.create_function name: 'chr_from_cid', call: @f.chr_from_cid
+    @dba.create_function name: 'cid_from_chr', call: @f.cid_from_chr
+    @dba.create_function name: 'to_hex',       call: @f.to_hex
+    #.......................................................................................................
     return null
 
   #---------------------------------------------------------------------------------------------------------
