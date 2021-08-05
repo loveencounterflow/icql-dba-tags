@@ -220,6 +220,10 @@ class @Dtags
         select nr, lo, hi, mode, tag, value
         from #{@cfg.prefix}tagged_ranges
         order by nr;"""
+      get_tags_and_rangelists: SQL"""
+        select key, tags, ranges
+        from #{@cfg.prefix}tags_and_rangelists
+        order by key;"""
     return null
 
   #---------------------------------------------------------------------------------------------------------
@@ -491,5 +495,16 @@ class @Dtags
     for { lo, hi, tags, } from @dba.query @sql.get_contiguous_ranges
       tags = JSON.parse tags
       R.push { lo, hi, tags, }
+    return R
+
+  #---------------------------------------------------------------------------------------------------------
+  get_tags_and_rangelists: ( cfg ) ->
+    ### TAINT implicit cache interaction ###
+    @_create_minimal_contiguous_ranges() unless @_cache_filled
+    R = []
+    for { key, tags, ranges, } from @dba.query @sql.get_tags_and_rangelists
+      tags    = JSON.parse tags
+      ranges  = JSON.parse ranges
+      R.push { key, tags, ranges, }
     return R
 
