@@ -397,7 +397,7 @@ class @Dtags
     return null
 
   #---------------------------------------------------------------------------------------------------------
-  _chr_class_from_range: ( range ) ->
+  _regex_chr_class_from_range: ( range ) ->
     ### TAINT make addition of spaces configurable, e.g. as `all_groups_extra: '\\s'`  ###
     [ lo, hi, ] = range
     return "\\u{#{lo.toString 16}}" if lo is hi
@@ -416,7 +416,7 @@ class @Dtags
     parts = []
     for { key, tags, ranges, } from @dba.query SQL"select * from #{@cfg.prefix}tags_and_rangelists;"
       ranges = JSON.parse ranges
-      ranges = ( ( @_chr_class_from_range range ) for range in ranges ).join ''
+      ranges = ( ( @_regex_chr_class_from_range range ) for range in ranges ).join ''
       parts.push "(?<#{key}>[#{ranges}]+)"
     parts = parts.join '|'
     return @_text_regions_re = new RegExp parts, 'gu'
