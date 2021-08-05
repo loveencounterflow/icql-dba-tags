@@ -466,7 +466,8 @@ class @Dtags
     R   = {}
     sql = SQL"select nr, tag, value as fallback from #{@cfg.prefix}tags order by nr;"
     for { nr, tag, fallback, } from @dba.query sql
-      R[ tag ] = { nr, fallback, }
+      fallback  = JSON.parse fallback
+      R[ tag ]  = { nr, fallback, }
     return R
 
   #---------------------------------------------------------------------------------------------------------
