@@ -434,8 +434,9 @@ class @Dtags
     return @_text_regions_re = new RegExp parts, 'gu'
 
   #---------------------------------------------------------------------------------------------------------
-  ### TAINT use `cfg` ###
   find_tagged_regions: ( text ) ->
+    ### TAINT use `cfg` ###
+    ### TAINT may want to use new `/.../d` flag when it becomes available ###
     re    = @_text_regions_re ? @_build_text_regions_re() ### TAINT implicit cache interaction ###
     # debug '^33436^', re
     R     = []
