@@ -58,7 +58,7 @@ types.declare 'dbatags_constructor_cfg', tests:
 
 #-----------------------------------------------------------------------------------------------------------
 types.declare 'dbatags_tag', tests:
-  '@isa.nonempty_text x':       ( x ) -> @isa.nonempty_text x
+  '( x.match name_re )?':       ( x ) -> ( x.match name_re )?
 
 #-----------------------------------------------------------------------------------------------------------
 types.declare 'dbatags_mode', tests:
