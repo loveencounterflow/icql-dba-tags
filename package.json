@@ -1,6 +1,6 @@
 {
   "name": "icql-dba-tags",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "description": "icql-dba extension for tagging arbitrary objects individually or by range",
   "main": "lib/main.js",
   "scripts": {
