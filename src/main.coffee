@@ -47,14 +47,15 @@ tagex_re = ///
 
 #===========================================================================================================
 types.declare 'dbatags_constructor_cfg', tests:
-  '@isa.object x':        ( x ) -> @isa.object x
-  'x.prefix is a prefix': ( x ) ->
+  '@isa.object x':                ( x ) -> @isa.object x
+  'x.prefix is a prefix':         ( x ) ->
     return false unless @isa.text x.prefix
     return true if x.prefix is ''
     return ( /^[_a-z][_a-z0-9]*$/ ).test x.prefix
   "x.fallbacks in [ true, false, 'all', ]": ( x ) -> x.fallbacks in [ true, false, 'all', ]
-  "@isa.integer x.first_id":  ( x ) -> @isa.integer x.first_id
-  "@isa.integer x.last_id":   ( x ) -> @isa.integer x.last_id
+  "@isa.integer x.first_id":      ( x ) -> @isa.integer x.first_id
+  "@isa.integer x.last_id":       ( x ) -> @isa.integer x.last_id
+  "( @type_of x.dba ) is 'dba'":  ( x ) -> ( @type_of x.dba ) is 'dba'
 
 #-----------------------------------------------------------------------------------------------------------
 types.declare 'dbatags_tag', tests:
@@ -143,11 +144,8 @@ class @Dtags
   constructor: ( cfg ) ->
     validate.dbatags_constructor_cfg @cfg = { types.defaults.dbatags_constructor_cfg..., cfg..., }
     #.......................................................................................................
-    if @cfg.dba?
-      @dba  = @cfg.dba
-      delete @cfg.dba
-    else
-      @dba  = new Dba()
+    def @, 'dba', { enumerable: false, value: @cfg.dba, }
+    delete @cfg.dba
     #.......................................................................................................
     @cfg              = freeze @cfg
     @_tag_max_nr      = 0
