@@ -25,6 +25,7 @@ SQL                       = String.raw
   freeze }                = require 'letsfreezethat'
 E                         = require './errors'
 { Dba, }                  = require 'icql-dba'
+def                       = Object.defineProperty
 
 
 #===========================================================================================================
@@ -203,7 +204,7 @@ class @Dtags
   #---------------------------------------------------------------------------------------------------------
   _compile_sql: ->
     prefix = @cfg.prefix
-    @sql =
+    sql =
       insert_tag: SQL"""
         insert into #{prefix}tags ( nr, tag, value )
           values ( $nr, $tag, $value );"""
@@ -246,6 +247,7 @@ class @Dtags
         select key, tags, ranges
         from #{@cfg.prefix}tags_and_rangelists
         order by key;"""
+    def @, 'sql', { enumerable: false, value: sql, }
     return null
 
   #---------------------------------------------------------------------------------------------------------
@@ -477,6 +479,7 @@ class @Dtags
       region.tags = tagsets[ region.key ]
       R.push region
     return R
+
   #=========================================================================================================
   # TABLE GETTERS
   #---------------------------------------------------------------------------------------------------------
