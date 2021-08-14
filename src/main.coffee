@@ -25,6 +25,16 @@ SQL                       = String.raw
   freeze }                = require 'letsfreezethat'
 E                         = require './errors'
 { Dba, }                  = require 'icql-dba'
+#---------------------------------------------------------------------------------------------------------
+### TAINT pattern does not allow for escaped quotes ###
+### TAINT re-use `name_re` ###
+tagex_re = ///
+  ^
+  (?<mode>  [ - + ] )
+  (?<tag>   [ a-z A-Z _ \/ \$ ] [ - a-z A-Z 0-9 _ \/ \$ ]* )
+  ( : (?<value> [^ - + ]+ | ' .* ' | " .* " ) )?
+  $
+  ///u
 
 
 #===========================================================================================================
@@ -317,20 +327,10 @@ class @Dtags
     return R
 
   #---------------------------------------------------------------------------------------------------------
-  ### TAINT pattern does not allow for escaped quotes ###
-  tagex_pattern: ///
-    ^
-    (?<mode>  [ - + ] )
-    (?<tag>   [ a-z A-Z _ \/ \$ ] [ - a-z A-Z 0-9 _ \/ \$ ]* )
-    ( : (?<value> [^ - + ]+ | ' .* ' | " .* " ) )?
-    $
-    ///
-
-  #---------------------------------------------------------------------------------------------------------
   parse_tagex: ( cfg ) ->
     validate.dbatags_parse_tagex_cfg cfg = { types.defaults.dbatags_parse_tagex_cfg..., cfg..., }
     { tagex, } = cfg
-    unless ( match = tagex.match @tagex_pattern )?
+    unless ( match = tagex.match tagex_re )?
       throw new E.Dtags_invalid_tagex '^dtags@777^', tagex
     { mode, tag, value, }   = match.groups
     switch mode
