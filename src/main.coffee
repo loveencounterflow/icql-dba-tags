@@ -25,6 +25,13 @@ SQL                       = String.raw
   freeze }                = require 'letsfreezethat'
 E                         = require './errors'
 { Dba, }                  = require 'icql-dba'
+
+
+#===========================================================================================================
+### RegEx from https://github.com/loveencounterflow/paragate/blob/master/src/htmlish.grammar.coffee with
+the additional exlusion of `+`, `-`, ':' which are used in TagExes ###
+name_re = /^[^-+:\s!?=\{\[\(<\/>\)\]\}'"]+$/u
+
 #---------------------------------------------------------------------------------------------------------
 ### TAINT pattern does not allow for escaped quotes ###
 ### TAINT re-use `name_re` ###
@@ -460,6 +467,16 @@ class @Dtags
     #.......................................................................................................
     return R
 
+  #---------------------------------------------------------------------------------------------------------
+  _markup_text: ( cfg ) ->
+    validate.dbatags_markup_text_cfg cfg = { types.defaults.dbatags_markup_text_cfg..., cfg..., }
+    R         = []
+    { text, } = cfg
+    tagsets   = @get_tagsets_by_keys()
+    for region in regions = @find_tagged_regions text
+      region.tags = tagsets[ region.key ]
+      R.push region
+    return R
   #=========================================================================================================
   # TABLE GETTERS
   #---------------------------------------------------------------------------------------------------------
