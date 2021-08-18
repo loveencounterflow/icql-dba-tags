@@ -2,12 +2,14 @@ lockfileVersion: 5.3
 
 specifiers:
   cnd: ^9.2.2
+  guy: ^1.0.0
   icql-dba: ^7.2.0
   intertype: ^7.6.7
   letsfreezethat: ^3.1.0
 
 dependencies:
   cnd: 9.2.2
+  guy: 1.0.0
   intertype: 7.6.7
   letsfreezethat: 3.1.0
 
@@ -183,6 +185,15 @@ packages:
   /graceful-fs/4.2.8:
     resolution: {integrity: sha512-qkIilPUYcNhJpd33n0GBXTB1MMPp14TxEsEs0pTrsSVucApsYzW5V+Q8Qxhik6KU3evy+qkAAowTByymK0avdg==}
     dev: true
+
+  /guy/1.0.0:
+    resolution: {integrity: sha512-cwRh8VJPQ5cXxDfxY3/elbBVBuAXGMnLXeC53sLRAEzq0PjmIBMgnCq2xnqMFrsN9TQOuv3g/ER/pb5pER/UoQ==}
+    peerDependencies:
+      deasync: ^0.1.22
+    dependencies:
+      cnd: 9.2.2
+      intertype: 7.6.7
+    dev: false
 
   /hollerith-codec/3.0.1:
     resolution: {integrity: sha512-n5RohCykMVDvx/dPJdIb6z1NUfprkVAg8Q5nuPAFutJ92741aeNyWisK1GKs3bzxGGOxUsz8XwYK9vg/CglT6A==}
