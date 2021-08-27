@@ -25,7 +25,7 @@ SQL                       = String.raw
   freeze }                = require 'letsfreezethat'
 E                         = require './errors'
 { Dba, }                  = require 'icql-dba'
-def                       = Object.defineProperty
+guy                       = require 'guy'
 
 
 #===========================================================================================================
@@ -144,7 +144,7 @@ class @Dtags
   constructor: ( cfg ) ->
     validate.dbatags_constructor_cfg @cfg = { types.defaults.dbatags_constructor_cfg..., cfg..., }
     #.......................................................................................................
-    def @, 'dba', { enumerable: false, value: @cfg.dba, }
+    guy.props.def @, 'dba', { enumerable: false, value: @cfg.dba, }
     delete @cfg.dba
     #.......................................................................................................
     @cfg              = freeze @cfg
@@ -245,7 +245,7 @@ class @Dtags
         select key, tags, ranges
         from #{@cfg.prefix}tags_and_rangelists
         order by key;"""
-    def @, 'sql', { enumerable: false, value: sql, }
+    guy.props.def @, 'sql', { enumerable: false, value: sql, }
     return null
 
   #---------------------------------------------------------------------------------------------------------
