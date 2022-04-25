@@ -2,19 +2,19 @@ lockfileVersion: 5.3
 
 specifiers:
   cnd: ^9.2.2
-  guy: ^1.0.0
-  icql-dba: ^7.2.0
-  intertype: ^7.6.7
+  guy: 4.1.2
+  icql-dba: 10.1.0
+  intertype: 7.7.0
   letsfreezethat: ^3.1.0
 
 dependencies:
   cnd: 9.2.2
-  guy: 1.0.0
-  intertype: 7.6.7
+  guy: 4.1.2
+  intertype: 7.7.0
   letsfreezethat: 3.1.0
 
 devDependencies:
-  icql-dba: 7.2.0
+  icql-dba: 10.1.0
 
 packages:
 
@@ -73,11 +73,6 @@ packages:
   /clean-stack/2.2.0:
     resolution: {integrity: sha512-4diC9HaTE+KRAMWhDhrGOECgWZxoevMc5TlkObMqNSsVU62PYzXZ/SMTjzyGAFF1YusgxGcSWTEXBhp0CPwQ1A==}
     engines: {node: '>=6'}
-    dev: true
-
-  /cnd/9.2.1:
-    resolution: {integrity: sha512-JszZtSlOCxkIvNPKpw1PmIcQUjYO+pBqVoKVH2STHLtG4JHHJ1NHowv39lhyxzlPxUTZk7pZ3qO7CfrfJ8ZSKw==}
-    hasBin: true
     dev: true
 
   /cnd/9.2.2:
@@ -186,34 +181,38 @@ packages:
     resolution: {integrity: sha512-qkIilPUYcNhJpd33n0GBXTB1MMPp14TxEsEs0pTrsSVucApsYzW5V+Q8Qxhik6KU3evy+qkAAowTByymK0avdg==}
     dev: true
 
-  /guy/1.0.0:
-    resolution: {integrity: sha512-cwRh8VJPQ5cXxDfxY3/elbBVBuAXGMnLXeC53sLRAEzq0PjmIBMgnCq2xnqMFrsN9TQOuv3g/ER/pb5pER/UoQ==}
+  /guy/2.7.0:
+    resolution: {integrity: sha512-yA2pHwCesUoAR/b5Y4bbIvZYLDNYKAymbih+tvTeSnNjp9/6YvDJXlTjsQiPLC6vaftWl1OQ1ErchiK4F9wXjg==}
     peerDependencies:
       deasync: ^0.1.22
     dependencies:
       cnd: 9.2.2
       intertype: 7.6.7
-    dev: false
-
-  /hollerith-codec/3.0.1:
-    resolution: {integrity: sha512-n5RohCykMVDvx/dPJdIb6z1NUfprkVAg8Q5nuPAFutJ92741aeNyWisK1GKs3bzxGGOxUsz8XwYK9vg/CglT6A==}
-    dependencies:
-      cnd: 9.2.1
-      intertype: 7.6.5
+      letsfreezethat: 3.1.0
     dev: true
 
-  /icql-dba/7.2.0:
-    resolution: {integrity: sha512-LYBNHL1U1Xo+Xx93Lm3ZLh9I+E5j1oa/mPM07BMQyAOehClXpbM5/1UXEGvqDZYzGVZ9BlKKbkYHKcqjMBeb6w==}
+  /guy/4.1.2:
+    resolution: {integrity: sha512-U9C12Dxk/yUNzV58cQutW5noGH6Y8pkqsbdNc60Yn/cHtudRCJ1ITju+dnLEV/juaUsOUxZdi3KJrBbBZOKiOw==}
+    dependencies:
+      cnd: 9.2.2
+      intertype: 7.6.7
+      letsfreezethat: 3.1.0
+    dev: false
+
+  /icql-dba/10.1.0:
+    resolution: {integrity: sha512-YwnHGsqh1WyGD9CH6sTQHb2WCza0t/oH3CDrJ701bqwbkIM0U4d3oSAF4hkpMyPE813ItwJstH2PL5JO87LNGw==}
     requiresBuild: true
     dependencies:
       cnd: 9.2.2
       csv-parser: 3.0.0
-      hollerith-codec: 3.0.1
+      guy: 2.7.0
       intertype: 7.6.7
       letsfreezethat: 3.1.0
       mysql-tokenizer: 1.0.7
       n-readlines: 1.0.1
       tempy: 1.0.1
+    transitivePeerDependencies:
+      - deasync
     dev: true
 
   /ignore/5.1.8:
@@ -237,16 +236,16 @@ packages:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
     dev: true
 
-  /intertype/7.6.5:
-    resolution: {integrity: sha512-763YK3ezLYy9FkX+cTTg/qwGHteqlaTMiec9a2sVAKm7kXp9e7QkzbyYS6u4CcbLxx12L8bcRbe3SFsPeaJCMA==}
-    dependencies:
-      multimix: 5.0.0
-    dev: true
-
   /intertype/7.6.7:
     resolution: {integrity: sha512-vBgYabqxX3fLa9f0Z3QeXgYszadAGdAHXdLcdQc5ZxZSG5CmbJCdYcudZLYtgmNo8epQag8zzyg7wwx+OD5J8g==}
     dependencies:
       multimix: 5.0.0
+
+  /intertype/7.7.0:
+    resolution: {integrity: sha512-Sv923oXpq9In8/CuxP5KAKc3FIETOEl23ltwSfLOnn/8V8A5pDRlxWo0vhaA6p7WybRMgeZXsE4Etw98tWUMPA==}
+    dependencies:
+      multimix: 5.0.0
+    dev: false
 
   /is-extglob/2.1.1:
     resolution: {integrity: sha1-qIwCU1eR8C7TfHahueqXc8gz+MI=}

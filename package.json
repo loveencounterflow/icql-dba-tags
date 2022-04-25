@@ -24,12 +24,12 @@
   "homepage": "https://github.com/loveencounterflow/icql-dba-tags#readme",
   "dependencies": {
     "cnd": "^9.2.2",
-    "guy": "^1.0.0",
-    "intertype": "^7.6.7",
+    "guy": "4.1.2",
+    "intertype": "7.7.0",
     "letsfreezethat": "^3.1.0"
   },
   "devDependencies": {
-    "icql-dba": "^7.2.0"
+    "icql-dba": "10.1.0"
   },
   "peerDependencies": {
     "icql-dba": "^7.2.0"
